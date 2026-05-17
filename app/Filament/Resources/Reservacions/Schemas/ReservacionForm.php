@@ -274,7 +274,7 @@ class ReservacionForm
                                 $fechaSalida = $get('fecha_salida');
                                 if ($fechaEntrada && $fechaSalida) {
                                     $query->whereDoesntHave('reservaciones', function ($q) use ($fechaEntrada, $fechaSalida) {
-                                        $q->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
+                                        $q->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
                                           ->where('fecha_entrada', '<', $fechaSalida)
                                           ->where('fecha_salida', '>', $fechaEntrada);
                                     });
@@ -352,6 +352,7 @@ class ReservacionForm
                             ->options([
                                 'Pendiente de pago' => 'Pendiente de pago',
                                 'Confirmada' => 'Confirmada',
+                                'En estadía' => 'En estadía',
                                 'Cancelada' => 'Cancelada',
                                 'Finalizada' => 'Finalizada',
                             ])

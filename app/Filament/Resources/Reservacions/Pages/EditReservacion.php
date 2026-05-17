@@ -33,7 +33,7 @@ class EditReservacion extends EditRecord
             $tieneReservaActiva = \App\Models\Reservacion::query()
                 ->where('huesped_id', $huespedId)
                 ->where('id', '!=', $this->record->id)
-                ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
+                ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
                 ->exists();
 
             if ($tieneReservaActiva) {
@@ -82,7 +82,7 @@ class EditReservacion extends EditRecord
             $cruce = \App\Models\Reservacion::query()
                 ->where('habitacion_id', $habitacionId)
                 ->where('id', '!=', $this->record->id)
-                ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
+                ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
                 ->where('fecha_entrada', '<', $fechaSalida)
                 ->where('fecha_salida', '>', $fechaEntrada)
                 ->exists();
@@ -111,7 +111,7 @@ class EditReservacion extends EditRecord
         $estadoActual = $data['estado_reservacion'] ?? 'Pendiente de pago';
 
         if ($estadoPago === 'Confirmado') {
-            if ($estadoActual !== 'Finalizada') {
+            if ($estadoActual !== 'Finalizada' && $estadoActual !== 'En estadía') {
                 $data['estado_reservacion'] = 'Confirmada';
             }
             if (empty($data['codigo_checkin'])) {

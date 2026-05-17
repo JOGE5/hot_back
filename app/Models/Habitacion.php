@@ -44,7 +44,7 @@ class Habitacion extends Model
         }
 
         $tieneReservaActiva = $this->reservaciones()
-            ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
+            ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
             ->exists();
 
         return $tieneReservaActiva ? 'Reservada' : 'Disponible';

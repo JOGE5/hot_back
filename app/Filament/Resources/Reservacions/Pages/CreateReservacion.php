@@ -12,7 +12,7 @@ class CreateReservacion extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         logger()->info('Datos antes de crear reservacion', $data);
-        
+
         unset($data['filtro_tipo_habitacion'], $data['filtro_estado_habitacion']);
 
         $habitacionId = $data['habitacion_id'] ?? null;

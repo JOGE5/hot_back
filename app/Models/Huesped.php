@@ -45,7 +45,7 @@ class Huesped extends Model
     public function getEstadoReservaVisualAttribute(): string
     {
         $tieneReserva = $this->reservaciones()
-            ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
+            ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
             ->exists();
 
         return $tieneReserva ? 'En reservación' : 'Sin reserva activa';

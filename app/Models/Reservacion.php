@@ -22,6 +22,11 @@ class Reservacion extends Model
         'estado_pago',
         'codigo_checkin',
         'observacion',
+        'checkin_at',
+        'checkin_user_id',
+        'codigo_checkout',
+        'checkout_at',
+        'checkout_user_id',
     ];
 
     protected $casts = [
@@ -29,6 +34,8 @@ class Reservacion extends Model
         'fecha_salida' => 'date',
         'cantidad_personas' => 'integer',
         'total' => 'decimal:2',
+        'checkin_at' => 'datetime',
+        'checkout_at' => 'datetime',
     ];
 
     public function huesped(): BelongsTo
@@ -39,5 +46,15 @@ class Reservacion extends Model
     public function habitacion(): BelongsTo
     {
         return $this->belongsTo(Habitacion::class, 'habitacion_id');
+    }
+
+    public function checkinUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checkin_user_id');
+    }
+
+    public function checkoutUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checkout_user_id');
     }
 }

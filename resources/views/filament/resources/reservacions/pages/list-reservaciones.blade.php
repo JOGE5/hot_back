@@ -239,6 +239,7 @@
                         <option value="">Estado Reserva</option>
                         <option value="PENDIENTE DE PAGO">Pendiente de pago</option>
                         <option value="CONFIRMADA">Confirmada</option>
+                        <option value="EN ESTADÍA">En estadía</option>
                         <option value="CANCELADA">Cancelada</option>
                         <option value="FINALIZADA">Finalizada</option>
                     </x-filament::input.select>
@@ -294,8 +295,9 @@
                 $estadoColor = match ($reservacion->estado_reservacion) {
                     'PENDIENTE DE PAGO' => 'background-color: #d97706; color: #ffffff;',
                     'CONFIRMADA' => 'background-color: #16a34a; color: #ffffff;',
+                    'EN ESTADÍA' => 'background-color: #2563eb; color: #ffffff;',
                     'CANCELADA' => 'background-color: #dc2626; color: #ffffff;',
-                    'FINALIZADA' => 'background-color: #2563eb; color: #ffffff;',
+                    'FINALIZADA' => 'background-color: #6b7280; color: #ffffff;',
                     default => 'background-color: #6b7280; color: #ffffff;',
                 };
 
@@ -315,8 +317,9 @@
                 $cardAccent = match ($reservacion->estado_reservacion) {
                     'PENDIENTE DE PAGO' => '#d97706',
                     'CONFIRMADA' => '#16a34a',
+                    'EN ESTADÍA' => '#2563eb',
                     'CANCELADA' => '#dc2626',
-                    'FINALIZADA' => '#2563eb',
+                    'FINALIZADA' => '#6b7280',
                     default => '#6b7280',
                 };
             @endphp
