@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 class Reservacion extends Model
 {
@@ -38,6 +40,41 @@ class Reservacion extends Model
         'checkout_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function (Reservacion $reservacion): void {
+            if ($reservacion->estado_pago !== 'Confirmado') {
+                return;
+            }
+
+            if (empty($reservacion->metodo_pago)) {
+                return;
+            }
+
+            if ((float) $reservacion->total <= 0) {
+                return;
+            }
+
+            $existePagoConfirmado = Pago::where('reservacion_id', $reservacion->id)
+                ->where('estado_pago', 'Confirmado')
+                ->exists();
+
+            if ($existePagoConfirmado) {
+                return;
+            }
+
+            Pago::create([
+                'reservacion_id' => $reservacion->id,
+                'monto' => $reservacion->total,
+                'metodo_pago' => $reservacion->metodo_pago,
+                'estado_pago' => 'Confirmado',
+                'fecha_pago' => now(),
+                'registrado_por' => Auth::id(),
+                'observacion' => 'Pago registrado automáticamente desde reservación',
+            ]);
+        });
+    }
+
     public function huesped(): BelongsTo
     {
         return $this->belongsTo(Huesped::class, 'huesped_id');
@@ -56,5 +93,10 @@ class Reservacion extends Model
     public function checkoutUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'checkout_user_id');
+    }
+
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class, 'reservacion_id');
     }
 }
