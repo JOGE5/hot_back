@@ -35,16 +35,18 @@ class Habitacion extends Model
 
     public function getEstadoVisualAttribute(): string
     {
-        if (in_array($this->estado, ['Mantenimiento', 'Inactiva'])) {
-            return $this->estado;
+        if ($this->estado === 'Mantenimiento') {
+            return 'Mantenimiento';
         }
 
-        $tieneReserva = $this->reservaciones()
+        if ($this->estado === 'Inactiva') {
+            return 'Inactiva';
+        }
+
+        $tieneReservaActiva = $this->reservaciones()
             ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
-            ->where('fecha_entrada', '<=', now()->toDateString())
-            ->where('fecha_salida', '>', now()->toDateString())
             ->exists();
 
-        return $tieneReserva ? 'Reservada' : 'Disponible';
+        return $tieneReservaActiva ? 'Reservada' : 'Disponible';
     }
 }
