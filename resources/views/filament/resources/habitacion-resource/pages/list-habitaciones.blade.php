@@ -278,7 +278,8 @@
     <div class="hotel-grid-container">
         @forelse($this->habitaciones as $habitacion)
             @php
-                $estadoColor = match ($habitacion->estado) {
+                $estadoVisual = $habitacion->estado_visual;
+                $estadoColor = match ($estadoVisual) {
                     'Disponible' => 'background-color: #16a34a; color: #ffffff;',
                     'Reservada' => 'background-color: #d97706; color: #ffffff;',
                     'Ocupada' => 'background-color: #dc2626; color: #ffffff;',
@@ -308,7 +309,7 @@
                     <div class="card-header-row">
                         <h3 class="card-title">Habitación {{ $habitacion->numero }}</h3>
                         <span class="badge-estado" style="{{ $estadoColor }}">
-                            {{ strtoupper($habitacion->estado) }}
+                            {{ strtoupper($estadoVisual) }}
                         </span>
                     </div>
                     

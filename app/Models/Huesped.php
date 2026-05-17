@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Huesped extends Model
 {
@@ -34,5 +35,19 @@ class Huesped extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reservaciones(): HasMany
+    {
+        return $this->hasMany(Reservacion::class, 'huesped_id');
+    }
+
+    public function getEstadoReservaVisualAttribute(): string
+    {
+        $tieneReserva = $this->reservaciones()
+            ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada'])
+            ->exists();
+
+        return $tieneReserva ? 'En reservación' : 'Sin reserva activa';
     }
 }

@@ -49,6 +49,15 @@ class HuespedsTable
                     ->boolean()
                     ->sortable(),
 
+                TextColumn::make('estado_reserva_visual')
+                    ->label('Estado reserva')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'En reservación' => 'warning',
+                        'Sin reserva activa' => 'gray',
+                        default => 'gray',
+                    }),
+
                 TextColumn::make('created_at')
                     ->label('Registrado')
                     ->dateTime()
