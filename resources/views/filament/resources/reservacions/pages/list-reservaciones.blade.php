@@ -396,6 +396,19 @@
                                 Editar
                             </x-filament::button>
                         @endif
+                        
+                        @if($reservacion->estado_pago === 'Confirmado' && $reservacion->total > 0 && !empty($reservacion->codigo_checkin))
+                            <x-filament::button 
+                                tag="a" 
+                                href="{{ route('admin.reservaciones.recibo', $reservacion) }}"
+                                color="success"
+                                size="sm"
+                                class="flex-1"
+                                target="_blank"
+                            >
+                                Recibo
+                            </x-filament::button>
+                        @endif
                     </div>
                 </div>
             </div>
