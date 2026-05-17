@@ -18,4 +18,5 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/reportes/check-in/pdf', [CheckInReporteController::class, 'pdf'])->name('reportes.check-in.pdf');
 
     Route::get('/reservaciones/{reservacion}/recibo', [ReciboReservacionController::class, 'generarPdf'])->name('reservaciones.recibo');
+    Route::post('/reservaciones/{reservacion}/enviar-recibo', [ReciboReservacionController::class, 'enviarCorreo'])->name('reservaciones.enviar-recibo');
 });

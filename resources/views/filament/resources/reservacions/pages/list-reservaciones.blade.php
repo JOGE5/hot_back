@@ -409,6 +409,42 @@
                                 Recibo
                             </x-filament::button>
                         @endif
+
+                        @if($reservacion->estado_pago === 'Confirmado' && $reservacion->total > 0 && !empty($reservacion->codigo_checkin) && !empty($reservacion->huesped?->correo_electronico))
+                            <form
+                                method="POST"
+                                action="{{ route('admin.reservaciones.enviar-recibo', $reservacion) }}"
+                                style="flex: 1; display: contents;"
+                                onsubmit="return confirm('¿Enviar el recibo al correo del huésped?');"
+                            >
+                                @csrf
+                                <button
+                                    type="submit"
+                                    style="
+                                        flex: 1;
+                                        display: inline-flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        gap: 4px;
+                                        padding: 6px 12px;
+                                        font-size: 0.75rem;
+                                        font-weight: 600;
+                                        color: #ffffff;
+                                        background-color: #2563eb;
+                                        border: none;
+                                        border-radius: 8px;
+                                        cursor: pointer;
+                                        white-space: nowrap;
+                                        transition: background-color 0.15s ease;
+                                        width: 100%;
+                                    "
+                                    onmouseover="this.style.backgroundColor='#1d4ed8'"
+                                    onmouseout="this.style.backgroundColor='#2563eb'"
+                                >
+                                    Enviar recibo
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
