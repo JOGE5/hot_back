@@ -4,25 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Filament\Actions\DeleteAction;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable, SoftDeletes;
+    use HasApiTokens, Notifiable, SoftDeletes;
 
     protected $fillable = [
-    'role_id',
-    'nombres',
-    'apellido_paterno',
-    'apellido_materno',
-    'name',
-    'email',
-    'password',
-    'estado',
+        'role_id',
+        'nombres',
+        'apellido_paterno',
+        'apellido_materno',
+        'name',
+        'email',
+        'password',
+        'estado',
     ];
 
     protected $hidden = [

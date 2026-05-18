@@ -1,0 +1,16 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\HuespedController;
+use Illuminate\Support\Facades\Route;
+
+Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'me'])->name('api.me');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
+
+    Route::prefix('huesped')->name('api.huesped.')->group(function () {
+        Route::get('/dashboard', [HuespedController::class, 'dashboard'])->name('dashboard');
+    });
+});
