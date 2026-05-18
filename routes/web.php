@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\MenuPublicadoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/menu-del-dia', MenuPublicadoController::class)->name('menu-publicado');
 
 use App\Http\Controllers\Admin\HuespedReporteController;
 use App\Http\Controllers\Admin\CheckInReporteController;
