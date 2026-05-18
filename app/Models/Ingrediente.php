@@ -44,4 +44,11 @@ class Ingrediente extends Model
 
         return 'Disponible';
     }
+
+    public function platos()
+    {
+        return $this->belongsToMany(Plato::class, 'ingrediente_plato')
+            ->withPivot('cantidad_requerida')
+            ->withTimestamps();
+    }
 }
