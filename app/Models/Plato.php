@@ -39,6 +39,13 @@ class Plato extends Model
             ->withTimestamps();
     }
 
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'menu_plato')
+            ->withPivot('orden')
+            ->withTimestamps();
+    }
+
     public function tieneStockSuficiente(): bool
     {
         if ($this->ingredientes->isEmpty()) {
