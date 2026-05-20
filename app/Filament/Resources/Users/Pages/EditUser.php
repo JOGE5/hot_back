@@ -85,7 +85,6 @@ class EditUser extends EditRecord
             ($data['apellido_materno'] ?? '')
         );
 
-        // La contraseña no se edita desde Filament.
         unset($data['password']);
 
         return $data;
