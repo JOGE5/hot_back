@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Habitacion;
 use App\Models\Menu;
+use App\Models\Paquete;
 use App\Models\Reservacion;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -250,6 +251,33 @@ class HuespedController extends Controller
 
         return response()->json([
             'menus' => $menus,
+        ]);
+    }
+
+    public function paquetes()
+    {
+        $paquetes = Paquete::query()
+            ->select([
+                'id',
+                'nombre',
+                'descripcion',
+                'imagen',
+                'tipo_habitacion',
+                'tour_incluido',
+                'incluye_desayuno',
+                'incluye_almuerzo',
+                'incluye_cena',
+                'duracion_dias',
+                'precio_total',
+                'estado',
+                'created_at',
+            ])
+            ->where('estado', 'Publicado')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'paquetes' => $paquetes,
         ]);
     }
 }
