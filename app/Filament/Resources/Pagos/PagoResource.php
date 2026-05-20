@@ -11,10 +11,12 @@ use App\Filament\Resources\Pagos\Schemas\PagoInfolist;
 use App\Filament\Resources\Pagos\Tables\PagosTable;
 use App\Models\Pago;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class PagoResource extends Resource
@@ -32,6 +34,46 @@ class PagoResource extends Resource
     protected static ?string $pluralModelLabel = 'pagos';
 
     protected static ?string $recordTitleAttribute = 'id';
+
+    public static function canViewAny(): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN', 'RECEPCIONISTA']);
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return self::canViewAny();
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN', 'RECEPCIONISTA']);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN', 'RECEPCIONISTA']);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -61,5 +103,12 @@ class PagoResource extends Resource
             'view' => ViewPago::route('/{record}'),
             'edit' => EditPago::route('/{record}/edit'),
         ];
+    }
+
+    private static function tieneRol(array $roles): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user?->role && in_array($user->role->nombre, $roles, true);
     }
 }

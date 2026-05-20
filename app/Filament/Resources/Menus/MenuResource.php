@@ -9,11 +9,13 @@ use App\Filament\Resources\Menus\Schemas\MenuForm;
 use App\Filament\Resources\Menus\Tables\MenusTable;
 use App\Models\Menu;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
@@ -32,6 +34,46 @@ class MenuResource extends Resource
     protected static ?string $navigationLabel = 'Menus';
 
     protected static ?string $recordTitleAttribute = 'tipo_menu';
+
+    public static function canViewAny(): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN', 'CHEF']);
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return self::canViewAny();
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN', 'CHEF']);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN', 'CHEF']);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return self::tieneRol(['SUPER ADMIN', 'ADMIN']);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -69,5 +111,12 @@ class MenuResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    private static function tieneRol(array $roles): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user?->role && in_array($user->role->nombre, $roles, true);
     }
 }
