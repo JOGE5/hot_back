@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\HabitacionResource\Pages;
 
 use App\Filament\Resources\HabitacionResource;
+use App\Support\LogSistema;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -27,5 +28,14 @@ class EditHabitacion extends EditRecord
             ViewAction::make()
                 ->label('Ver'),
         ];
+    }
+
+    protected function afterSave(): void
+    {
+        LogSistema::registrar(
+            'EDITAR',
+            'Habitaciones',
+            'Habitación editada: ' . $this->record->numero . ' estado ' . $this->record->estado . '.'
+        );
     }
 }

@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use App\Models\Reservacion;
 use Filament\Notifications\Notification;
 use Filament\Facades\Filament;
+use App\Support\LogSistema;
 use BackedEnum;
 use UnitEnum;
 use Illuminate\Database\Eloquent\Builder;
@@ -114,6 +115,12 @@ class CheckIn extends Page
             
             $this->reservacion->save();
 
+            LogSistema::registrar(
+                'CHECK_IN',
+                'Check-in',
+                'Check-in confirmado para reservación #' . $this->reservacion->id . ' con código ' . $this->reservacion->codigo_checkin . '.'
+            );
+
             Notification::make()
                 ->title('Check-in realizado correctamente.')
                 ->success()
@@ -207,6 +214,12 @@ class CheckIn extends Page
         $this->reservacion_checkout->checkout_at = now();
         $this->reservacion_checkout->checkout_user_id = Filament::auth()->id();
         $this->reservacion_checkout->save();
+
+        LogSistema::registrar(
+            'CHECK_OUT',
+            'Check-out',
+            'Check-out confirmado para reservación #' . $this->reservacion_checkout->id . ' con código ' . $this->reservacion_checkout->codigo_checkout . '.'
+        );
 
         Notification::make()
             ->title('Check-out realizado correctamente.')

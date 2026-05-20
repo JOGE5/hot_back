@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Reservacions\Pages;
 
 use App\Filament\Resources\Reservacions\ReservacionResource;
+use App\Support\LogSistema;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateReservacion extends CreateRecord
@@ -112,5 +113,24 @@ class CreateReservacion extends CreateRecord
         }
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $this->record->loadMissing(['huesped', 'habitacion']);
+
+        LogSistema::registrar(
+            'CREAR',
+            'Reservaciones',
+            'Reservación creada #' . $this->record->id . ' para huésped ' . ($this->record->huesped?->nombres ?? 'Sin huésped') . ' en habitación ' . ($this->record->habitacion?->numero ?? 'Sin habitación') . '.'
+        );
+
+        if ($this->record->estado_pago === 'Confirmado') {
+            LogSistema::registrar(
+                'CONFIRMAR_PAGO',
+                'Pagos',
+                'Pago confirmado al crear reservación #' . $this->record->id . ' por Bs. ' . $this->record->total . '.'
+            );
+        }
     }
 }

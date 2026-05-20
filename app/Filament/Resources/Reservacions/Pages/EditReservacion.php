@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Reservacions\Pages;
 
 use App\Filament\Resources\Reservacions\ReservacionResource;
+use App\Support\LogSistema;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -10,6 +11,8 @@ use Filament\Resources\Pages\EditRecord;
 class EditReservacion extends EditRecord
 {
     protected static string $resource = ReservacionResource::class;
+
+    protected ?string $estadoPagoAnterior = null;
 
     protected function getHeaderActions(): array
     {
@@ -21,6 +24,8 @@ class EditReservacion extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->estadoPagoAnterior = $this->record->estado_pago;
+
         unset($data['filtro_tipo_habitacion'], $data['filtro_estado_habitacion']);
 
         $habitacionId = $data['habitacion_id'] ?? null;
@@ -126,5 +131,24 @@ class EditReservacion extends EditRecord
         }
 
         return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        $this->record->loadMissing(['huesped', 'habitacion']);
+
+        LogSistema::registrar(
+            'EDITAR',
+            'Reservaciones',
+            'Reservación editada #' . $this->record->id . ' para huésped ' . ($this->record->huesped?->nombres ?? 'Sin huésped') . ' en habitación ' . ($this->record->habitacion?->numero ?? 'Sin habitación') . '.'
+        );
+
+        if ($this->estadoPagoAnterior !== 'Confirmado' && $this->record->estado_pago === 'Confirmado') {
+            LogSistema::registrar(
+                'CONFIRMAR_PAGO',
+                'Pagos',
+                'Pago confirmado desde reservación #' . $this->record->id . ' por Bs. ' . $this->record->total . '.'
+            );
+        }
     }
 }

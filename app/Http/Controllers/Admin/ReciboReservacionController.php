@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\ReciboReservacionMail;
 use App\Models\Reservacion;
+use App\Support\LogSistema;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -27,6 +28,12 @@ class ReciboReservacionController extends Controller
 
         $pdf = Pdf::loadView('reportes.recibo_reservacion_pdf', compact('reservacion'))
                   ->setPaper('a4', 'portrait');
+
+        LogSistema::registrar(
+            'GENERAR_RECIBO_PDF',
+            'Recibos',
+            'Recibo PDF generado/descargado para reservación #' . $reservacion->id . ' con código ' . $reservacion->codigo_checkin . '.'
+        );
 
         return $pdf->download('recibo_reservacion_' . $reservacion->codigo_checkin . '.pdf');
     }
@@ -98,6 +105,12 @@ class ReciboReservacionController extends Controller
                 'No se pudo enviar el recibo. Revise la configuración del correo.'
             );
         }
+
+        LogSistema::registrar(
+            'ENVIAR_RECIBO_CORREO',
+            'Recibos',
+            'Recibo enviado por correo a ' . $reservacion->huesped->correo_electronico . ' para reservación #' . $reservacion->id . '.'
+        );
 
         return redirect()->back()->with(
             'success',

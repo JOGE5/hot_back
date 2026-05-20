@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Role;
+use App\Support\LogSistema;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
@@ -13,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
+
+    protected ?string $rolAnterior = null;
 
     protected function getHeaderActions(): array
     {
@@ -26,7 +29,14 @@ class EditUser extends EditRecord
                 ->modalDescription('El usuario será enviado a la papelera y podrá recuperarse posteriormente.')
                 ->modalSubmitActionLabel('Sí, dar de baja')
                 ->successNotificationTitle('Usuario dado de baja correctamente')
-                ->visible(fn (): bool => UserResource::puedeGestionarUsuario($this->record, permitirPropio: false)),
+                ->visible(fn (): bool => UserResource::puedeGestionarUsuario($this->record, permitirPropio: false))
+                ->after(function (): void {
+                    LogSistema::registrar(
+                        'ELIMINAR',
+                        'Usuarios',
+                        'Usuario administrativo dado de baja: ' . $this->record->name . ' (' . $this->record->email . ').'
+                    );
+                }),
         ];
     }
 
@@ -41,6 +51,8 @@ class EditUser extends EditRecord
                 'role_id' => 'No tienes permisos para modificar este usuario.',
             ]);
         }
+
+        $this->rolAnterior = $record->role->nombre;
 
         // No se permite modificar la propia cuenta desde Usuarios administrativos.
         if ((int) $user->id === (int) $record->id) {
@@ -77,5 +89,26 @@ class EditUser extends EditRecord
         unset($data['password']);
 
         return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        $this->record->loadMissing('role');
+
+        LogSistema::registrar(
+            'EDITAR',
+            'Usuarios',
+            'Usuario administrativo editado: ' . $this->record->name . ' (' . $this->record->email . ').'
+        );
+
+        $rolActual = $this->record->role?->nombre;
+
+        if ($this->rolAnterior && $rolActual && $this->rolAnterior !== $rolActual) {
+            LogSistema::registrar(
+                'CAMBIAR_ROL',
+                'Usuarios',
+                'Rol cambiado para ' . $this->record->name . ': ' . $this->rolAnterior . ' -> ' . $rolActual . '.'
+            );
+        }
     }
 }

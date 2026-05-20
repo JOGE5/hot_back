@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Huespeds\Pages;
 
 use App\Filament\Resources\Huespeds\HuespedResource;
+use App\Support\LogSistema;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateHuesped extends CreateRecord
@@ -18,5 +19,14 @@ class CreateHuesped extends CreateRecord
         unset($data['nacionalidad_otra']);
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        LogSistema::registrar(
+            'CREAR',
+            'Huéspedes',
+            'Huésped creado: ' . trim($this->record->nombres . ' ' . $this->record->apellido_paterno) . ' documento ' . $this->record->numero_documento . '.'
+        );
     }
 }

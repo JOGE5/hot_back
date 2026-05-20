@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Huespeds\Pages;
 
 use App\Filament\Resources\Huespeds\HuespedResource;
+use App\Support\LogSistema;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -42,5 +43,14 @@ class EditHuesped extends EditRecord
         unset($data['nacionalidad_otra']);
 
         return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        LogSistema::registrar(
+            'EDITAR',
+            'Huéspedes',
+            'Huésped editado: ' . trim($this->record->nombres . ' ' . $this->record->apellido_paterno) . ' documento ' . $this->record->numero_documento . '.'
+        );
     }
 }

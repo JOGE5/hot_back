@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Role;
+use App\Support\LogSistema;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Hash;
@@ -48,5 +49,16 @@ class CreateUser extends CreateRecord
         $data['email_verified_at'] = now();
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $this->record->loadMissing('role');
+
+        LogSistema::registrar(
+            'CREAR',
+            'Usuarios',
+            'Usuario administrativo creado: ' . $this->record->name . ' (' . $this->record->email . ') con rol ' . ($this->record->role?->nombre ?? 'Sin rol') . '.'
+        );
     }
 }
