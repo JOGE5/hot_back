@@ -4,8 +4,10 @@ namespace App\Filament\Widgets;
 
 use App\Models\Habitacion;
 use App\Models\Ingrediente;
+use App\Models\Paquete;
 use App\Models\Pago;
 use App\Models\Reservacion;
+use App\Models\Tour;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -22,7 +24,7 @@ class AdminDashboardStats extends StatsOverviewWidget
     protected int | array | null $columns = [
         'default' => 1,
         'md' => 3,
-        'xl' => 6,
+        'xl' => 4,
     ];
 
     public static function canView(): bool
@@ -80,6 +82,26 @@ class AdminDashboardStats extends StatsOverviewWidget
                 ->icon('heroicon-o-home-modern')
                 ->extraAttributes([
                     'class' => 'admin-kpi-card admin-kpi-card-success',
+                ]),
+
+            Stat::make('Tours disponibles', Tour::query()
+                ->where('estado', 'Disponible')
+                ->count())
+                ->description('Tours con estado disponible')
+                ->color('success')
+                ->icon('heroicon-o-map')
+                ->extraAttributes([
+                    'class' => 'admin-kpi-card admin-kpi-card-success',
+                ]),
+
+            Stat::make('Paquetes publicados', Paquete::query()
+                ->where('estado', 'Publicado')
+                ->count())
+                ->description('Paquetes actualmente publicados')
+                ->color('primary')
+                ->icon('heroicon-o-archive-box')
+                ->extraAttributes([
+                    'class' => 'admin-kpi-card admin-kpi-card-primary',
                 ]),
 
             Stat::make('Check-ins pendientes de hoy', Reservacion::query()
