@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Menus\Pages;
 
 use App\Filament\Resources\Menus\MenuResource;
+use App\Support\LogSistema;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,6 +29,15 @@ class CreateMenu extends CreateRecord
         $record->platos()->sync($this->getPlatosSyncData());
 
         return $record;
+    }
+
+    protected function afterCreate(): void
+    {
+        LogSistema::registrar(
+            'CREAR',
+            'Menús',
+            'Menú creado: ' . $this->record->tipo_menu . ' del ' . $this->record->fecha_menu?->format('Y-m-d') . '.'
+        );
     }
 
     protected function getPlatosSyncData(): array

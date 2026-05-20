@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Menus\Pages;
 
 use App\Filament\Resources\Menus\MenuResource;
+use App\Support\LogSistema;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -15,12 +16,28 @@ class EditMenu extends EditRecord
 
     protected array $platosMenu = [];
 
+    protected ?string $estadoAnterior = null;
+
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->after(function (): void {
+                    LogSistema::registrar(
+                        'ELIMINAR',
+                        'Menús',
+                        'Menú eliminado: ' . $this->record->tipo_menu . ' del ' . $this->record->fecha_menu?->format('Y-m-d') . '.'
+                    );
+                }),
             ForceDeleteAction::make(),
-            RestoreAction::make(),
+            RestoreAction::make()
+                ->after(function (): void {
+                    LogSistema::registrar(
+                        'RESTAURAR',
+                        'Menús',
+                        'Menú restaurado: ' . $this->record->tipo_menu . ' del ' . $this->record->fecha_menu?->format('Y-m-d') . '.'
+                    );
+                }),
         ];
     }
 
@@ -41,6 +58,7 @@ class EditMenu extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->estadoAnterior = $this->record->estado;
         $this->platosMenu = $data['platos_menu'] ?? [];
 
         unset($data['platos_menu']);
@@ -55,6 +73,31 @@ class EditMenu extends EditRecord
         $record->platos()->sync($this->getPlatosSyncData());
 
         return $record;
+    }
+
+    protected function afterSave(): void
+    {
+        LogSistema::registrar(
+            'EDITAR',
+            'Menús',
+            'Menú actualizado: ' . $this->record->tipo_menu . ' del ' . $this->record->fecha_menu?->format('Y-m-d') . '.'
+        );
+
+        if ($this->estadoAnterior !== 'Publicado' && $this->record->estado === 'Publicado') {
+            LogSistema::registrar(
+                'PUBLICAR',
+                'Menús',
+                'Menú publicado: ' . $this->record->tipo_menu . ' del ' . $this->record->fecha_menu?->format('Y-m-d') . '.'
+            );
+        }
+
+        if ($this->estadoAnterior !== 'Archivado' && $this->record->estado === 'Archivado') {
+            LogSistema::registrar(
+                'ARCHIVAR',
+                'Menús',
+                'Menú archivado: ' . $this->record->tipo_menu . ' del ' . $this->record->fecha_menu?->format('Y-m-d') . '.'
+            );
+        }
     }
 
     protected function getPlatosSyncData(): array
