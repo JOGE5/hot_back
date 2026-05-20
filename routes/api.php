@@ -11,6 +11,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
 
     Route::prefix('huesped')->name('api.huesped.')->group(function () {
+        Route::post('/cambiar-password', [HuespedController::class, 'cambiarPassword'])->name('cambiar-password');
         Route::get('/dashboard', [HuespedController::class, 'dashboard'])->name('dashboard');
         Route::get('/habitaciones-disponibles', [HuespedController::class, 'habitacionesDisponibles']);
         Route::get('/mis-reservaciones', [HuespedController::class, 'misReservaciones']);

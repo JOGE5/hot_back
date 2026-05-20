@@ -10,9 +10,40 @@ use App\Models\Reservacion;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class HuespedController extends Controller
 {
+    public function cambiarPassword(Request $request)
+    {
+        $data = $request->validate([
+            'password_actual' => ['required', 'string'],
+            'password_nuevo' => ['required', 'string', 'min:8', 'confirmed'],
+            'password_nuevo_confirmation' => ['required', 'string'],
+        ]);
+
+        $user = $request->user()->loadMissing('role');
+
+        if (! $user->role || $user->role->nombre !== 'HUESPED') {
+            return response()->json([
+                'message' => 'No tienes permisos para realizar esta acción.',
+            ], 403);
+        }
+
+        if (! Hash::check($data['password_actual'], $user->password)) {
+            return response()->json([
+                'message' => 'La contraseña actual no es correcta.',
+            ], 422);
+        }
+
+        $user->password = Hash::make($data['password_nuevo']);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Contraseña actualizada correctamente.',
+        ]);
+    }
+
     public function dashboard(Request $request)
     {
         $user = $request->user()->load('huesped');
