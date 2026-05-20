@@ -130,3 +130,191 @@
         rgba(15, 23, 42, 0.9);
     box-shadow: 0 16px 42px rgba(0, 0, 0, 0.30);
 }
+
+.fi-topbar-notificaciones-operativas {
+    margin-left: 0.5rem;
+    margin-right: 0.75rem;
+}
+
+.fi-topbar-notificaciones-operativas .admin-operational-notifications-button {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    height: 2.25rem;
+    position: relative;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease;
+    width: 2.25rem;
+}
+
+.fi-topbar-notificaciones-operativas .admin-operational-notifications-button:hover {
+    border-color: rgba(217, 119, 6, 0.38);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    transform: translateY(-1px);
+}
+
+.fi-topbar-notificaciones-operativas .admin-operational-notifications-button .fi-icon {
+    height: 1.05rem;
+    width: 1.05rem;
+}
+
+.fi-topbar-notificaciones-operativas .admin-operational-notifications-button .fi-icon-btn-badge-ctn {
+    right: -0.28rem;
+    top: -0.28rem;
+}
+
+.fi-topbar-notificaciones-operativas .admin-operational-notifications-button .fi-badge {
+    border: 2px solid var(--fi-body-bg, #ffffff);
+    font-size: 0.66rem;
+    line-height: 1;
+    min-height: 1rem;
+    min-width: 1rem;
+    padding: 0.1rem 0.28rem;
+}
+
+.dark .fi-topbar-notificaciones-operativas .admin-operational-notifications-button {
+    background: rgba(24, 24, 27, 0.86);
+    border-color: rgba(255, 255, 255, 0.10);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.dark .fi-topbar-notificaciones-operativas .admin-operational-notifications-button:hover {
+    background: rgba(39, 39, 42, 0.96);
+    border-color: rgba(251, 191, 36, 0.34);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.30);
+}
+
+.dark .fi-topbar-notificaciones-operativas .admin-operational-notifications-button .fi-badge {
+    border-color: #18181b;
+}
+
+.admin-operational-notifications-modal {
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 0.85rem;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+    color: #e4e4e7;
+    margin-top: 0.25rem;
+    padding: 0.85rem;
+}
+
+.admin-operational-notifications-summary {
+    color: #a1a1aa;
+    font-size: 0.875rem;
+    margin-bottom: 0.85rem;
+}
+
+.admin-operational-notifications-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.admin-operational-notification-card {
+    align-items: flex-start;
+    background: rgba(39, 39, 42, 0.76);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 0.28rem minmax(0, 1fr) auto;
+    padding: 0.85rem;
+}
+
+.admin-operational-notification-accent {
+    border-radius: 999px;
+    height: 100%;
+    min-height: 2.4rem;
+}
+
+.admin-operational-notification-card.is-warning .admin-operational-notification-accent {
+    background: #fbbf24;
+}
+
+.admin-operational-notification-card.is-danger .admin-operational-notification-accent {
+    background: #fb7185;
+}
+
+.admin-operational-notification-card.is-info .admin-operational-notification-accent {
+    background: #38bdf8;
+}
+
+.admin-operational-notification-title {
+    color: #f4f4f5;
+    font-size: 0.91rem;
+    font-weight: 650;
+    line-height: 1.25;
+}
+
+.admin-operational-notification-description {
+    color: #a1a1aa;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin-top: 0.22rem;
+}
+
+.admin-operational-notification-count {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.05rem;
+}
+
+.admin-operational-notifications-empty {
+    align-items: center;
+    background: rgba(39, 39, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 0.8rem;
+    display: flex;
+    gap: 0.85rem;
+    padding: 1rem;
+}
+
+.admin-operational-notifications-empty-icon {
+    align-items: center;
+    background: rgba(113, 113, 122, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 0.7rem;
+    color: #d4d4d8;
+    display: flex;
+    flex: 0 0 auto;
+    height: 2.35rem;
+    justify-content: center;
+    width: 2.35rem;
+}
+
+.admin-operational-notifications-empty-svg {
+    height: 1.05rem;
+    width: 1.05rem;
+}
+
+.admin-operational-notifications-empty-title {
+    color: #f4f4f5;
+    font-size: 0.92rem;
+    font-weight: 650;
+}
+
+.admin-operational-notifications-empty-text {
+    color: #a1a1aa;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin-top: 0.16rem;
+}
+
+@media (max-width: 640px) {
+    .fi-topbar-notificaciones-operativas {
+        margin-left: 0.25rem;
+        margin-right: 0.5rem;
+    }
+
+    .admin-operational-notification-card {
+        grid-template-columns: 0.25rem minmax(0, 1fr);
+    }
+
+    .admin-operational-notification-count {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+}

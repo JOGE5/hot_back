@@ -18,6 +18,7 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
@@ -87,6 +88,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): HtmlString => new HtmlString(
+                    Blade::render('<livewire:admin.notificaciones-operativas />'),
+                ),
+            )
             ->renderHook(
                 PanelsRenderHook::STYLES_AFTER,
                 fn (): HtmlString => new HtmlString(
