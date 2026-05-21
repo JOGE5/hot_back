@@ -65,7 +65,12 @@ class IngredienteForm
 
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento')
-                            ->native(false),
+                            ->native(false)
+                            ->minDate(today())
+                            ->rule('after_or_equal:today')
+                            ->validationMessages([
+                                'after_or_equal' => 'La fecha de vencimiento debe ser hoy o una fecha futura.',
+                            ]),
                     ])
                     ->columns(4),
 

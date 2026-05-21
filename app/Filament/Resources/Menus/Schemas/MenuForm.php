@@ -22,7 +22,12 @@ class MenuForm
                     ->schema([
                         DatePicker::make('fecha_menu')
                             ->label('Fecha del menu')
-                            ->required(),
+                            ->required()
+                            ->minDate(today())
+                            ->rule('after_or_equal:today')
+                            ->validationMessages([
+                                'after_or_equal' => 'La fecha del menú debe ser hoy o una fecha futura.',
+                            ]),
 
                         Select::make('tipo_menu')
                             ->label('Tipo de menu')
@@ -150,8 +155,13 @@ class MenuForm
                                     ->label('Orden')
                                     ->required()
                                     ->integer()
-                                    ->default(0)
-                                    ->minValue(0),
+                                    ->default(1)
+                                    ->minValue(1)
+                                    ->validationMessages([
+                                        'required' => 'El orden es obligatorio.',
+                                        'integer' => 'El orden debe ser un número entero.',
+                                        'min' => 'El orden debe ser mayor que 0.',
+                                    ]),
                             ])
                             ->columns(2)
                             ->defaultItems(0)

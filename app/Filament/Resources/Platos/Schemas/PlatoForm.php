@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Platos\Schemas;
 
 use App\Models\Ingrediente;
+use App\Models\User;
+use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -108,10 +110,31 @@ class PlatoForm
 
                         Select::make('chef_id')
                             ->label('Chef responsable')
-                            ->relationship('chef', 'name')
+                            ->options(fn (): array => User::query()
+                                ->where('estado', true)
+                                ->whereHas('role', fn ($query) => $query->where('nombre', 'CHEF'))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->toArray())
                             ->searchable()
                             ->preload()
-                            ->nullable(),
+                            ->required()
+                            ->rules([
+                                function (string $attribute, mixed $value, Closure $fail): void {
+                                    $esChefActivo = User::query()
+                                        ->whereKey($value)
+                                        ->where('estado', true)
+                                        ->whereHas('role', fn ($query) => $query->where('nombre', 'CHEF'))
+                                        ->exists();
+
+                                    if (! $esChefActivo) {
+                                        $fail('El chef responsable es obligatorio y debe ser un usuario activo con rol CHEF.');
+                                    }
+                                },
+                            ])
+                            ->validationMessages([
+                                'required' => 'El chef responsable es obligatorio y debe ser un usuario activo con rol CHEF.',
+                            ]),
                     ])
                     ->columns(2),
 

@@ -50,7 +50,7 @@ class CreateMenu extends CreateRecord
             }
 
             $syncData[$item['plato_id']] = [
-                'orden' => $item['orden'] ?? 0,
+                'orden' => max(1, (int) ($item['orden'] ?? 1)),
             ];
         }
 
