@@ -14,8 +14,10 @@ class EditTour extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
-            RestoreAction::make(),
+            DeleteAction::make()
+                ->visible(fn (): bool => TourResource::canDelete($this->record)),
+            RestoreAction::make()
+                ->visible(fn (): bool => TourResource::canRestore($this->record)),
         ];
     }
 }
