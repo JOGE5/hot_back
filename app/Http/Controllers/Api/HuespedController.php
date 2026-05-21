@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class HuespedController extends Controller
 {
@@ -250,6 +251,8 @@ class HuespedController extends Controller
 
     public function menuDelDia()
     {
+        $fechaMenu = today();
+
         $menus = Menu::query()
             ->select([
                 'id',
@@ -270,18 +273,49 @@ class HuespedController extends Controller
                             'estado',
                             'tiempo_preparacion',
                         ])
-                        ->where('platos.estado', 'Activo')
+                        ->where('platos.estado', 'Disponible')
                         ->orderBy('menu_plato.orden');
                 },
             ])
-            ->whereDate('fecha_menu', today())
+            ->whereDate('fecha_menu', $fechaMenu)
             ->where('estado', 'Publicado')
             ->orderBy('tipo_menu')
-            ->get()
-            ->groupBy('tipo_menu');
+            ->get();
+
+        Log::debug('API huesped menu del dia consultado.', [
+            'fecha_today' => $fechaMenu->toDateString(),
+            'menus_encontrados' => $menus->count(),
+            'platos_asociados' => $menus->sum(fn (Menu $menu) => $menu->platos->count()),
+        ]);
+
+        $data = $menus->map(function (Menu $menu) {
+            return [
+                'id' => $menu->id,
+                'fecha_menu' => $menu->fecha_menu?->toDateString(),
+                'tipo_menu' => $menu->tipo_menu,
+                'estado' => $menu->estado,
+                'platos' => $menu->platos->map(function ($plato) {
+                    return [
+                        'id' => $plato->id,
+                        'nombre' => $plato->nombre,
+                        'descripcion' => $plato->descripcion,
+                        'categoria' => $plato->categoria,
+                        'precio' => $plato->precio,
+                        'imagen' => $plato->imagen,
+                        'estado' => $plato->estado,
+                        'tiempo_preparacion' => $plato->tiempo_preparacion,
+                        'orden' => $plato->pivot?->orden,
+                    ];
+                })->values(),
+            ];
+        })->values();
 
         return response()->json([
-            'menus' => $menus,
+            'success' => true,
+            'data' => $data,
+            'message' => $data->isEmpty()
+                ? 'No hay menu publicado para hoy.'
+                : 'Menu del dia obtenido correctamente.',
         ]);
     }
 
