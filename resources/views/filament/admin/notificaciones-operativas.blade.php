@@ -14,14 +14,10 @@
     @if ($alertasPendientes->isEmpty())
         <div class="admin-operational-notifications-empty">
             <div class="admin-operational-notifications-empty-icon">
-                {!!
-                    \Filament\Support\generate_icon_html(
-                        'heroicon-o-bell',
-                        attributes: new \Illuminate\View\ComponentAttributeBag([
-                            'class' => 'admin-operational-notifications-empty-svg',
-                        ]),
-                    )
-                !!}
+                <x-filament::icon
+                    icon="heroicon-o-bell"
+                    class="admin-operational-notifications-empty-svg"
+                />
             </div>
 
             <div>

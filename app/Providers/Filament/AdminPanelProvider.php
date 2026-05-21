@@ -91,7 +91,7 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
                 fn (): HtmlString => new HtmlString(
-                    Blade::render('<livewire:admin.notificaciones-operativas />'),
+                    Blade::render('<livewire:admin.notificaciones-operativas wire:key="admin-topbar-notificaciones-operativas" />'),
                 ),
             )
             ->renderHook(
