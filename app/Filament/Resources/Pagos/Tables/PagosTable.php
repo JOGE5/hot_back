@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Pagos\Tables;
 
 use App\Exports\PagosExport;
+use App\Http\Controllers\Admin\ReciboReservacionController;
+use App\Models\Reservacion;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Columns\TextColumn;
@@ -182,6 +185,28 @@ class PagosTable
                     }),
             ])
             ->recordActions([
+                Action::make('descargar_recibo')
+                    ->label('Recibo')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->url(fn ($record): string => $record->reservacion
+                        ? route('admin.reservaciones.recibo', $record->reservacion)
+                        : '#')
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record): bool => self::puedeGenerarRecibo($record->reservacion)),
+
+                Action::make('enviar_recibo')
+                    ->label('Enviar recibo')
+                    ->icon('heroicon-o-envelope')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->modalHeading('Enviar recibo por correo')
+                    ->modalDescription('Se enviará el recibo al correo registrado del huésped.')
+                    ->action(fn ($record) => $record->reservacion
+                        ? app(ReciboReservacionController::class)->enviarCorreo($record->reservacion)
+                        : null)
+                    ->visible(fn ($record): bool => self::puedeEnviarRecibo($record->reservacion)),
+
                 ViewAction::make(),
                 EditAction::make(),
             ])
@@ -190,5 +215,37 @@ class PagosTable
                     //
                 ]),
             ]);
+    }
+
+    private static function puedeGenerarRecibo(?Reservacion $reservacion): bool
+    {
+        return $reservacion
+            && self::puedeGestionarRecibos()
+            && $reservacion->estado_pago === 'Confirmado'
+            && $reservacion->total > 0
+            && filled($reservacion->codigo_checkin);
+    }
+
+    private static function puedeEnviarRecibo(?Reservacion $reservacion): bool
+    {
+        if (! $reservacion) {
+            return false;
+        }
+
+        $reservacion->loadMissing('huesped');
+
+        return self::puedeGenerarRecibo($reservacion)
+            && filled($reservacion->huesped?->correo_electronico);
+    }
+
+    private static function puedeGestionarRecibos(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user?->role && in_array($user->role->nombre, [
+            'SUPER ADMIN',
+            'ADMIN',
+            'RECEPCIONISTA',
+        ], true);
     }
 }
