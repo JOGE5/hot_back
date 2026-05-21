@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Huespeds\Schemas;
 
+use App\Models\Huesped;
+use App\Models\User;
+use Closure;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -55,6 +58,40 @@ class HuespedForm
                     ->label('Correo electrónico')
                     ->email()
                     ->nullable()
+                    ->dehydrateStateUsing(fn (?string $state): ?string => self::normalizarCorreo($state))
+                    ->rules(fn (?Huesped $record): array => [
+                        function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                            $correo = self::normalizarCorreo(is_string($value) ? $value : null);
+
+                            if (! $correo) {
+                                if ($record?->user_id) {
+                                    $fail('El correo electrónico es obligatorio para un huésped con cuenta de acceso.');
+                                }
+
+                                return;
+                            }
+
+                            $existeHuesped = Huesped::withTrashed()
+                                ->whereRaw('LOWER(correo_electronico) = ?', [$correo])
+                                ->when($record, fn ($query) => $query->whereKeyNot($record->getKey()))
+                                ->exists();
+
+                            if ($existeHuesped) {
+                                $fail('El correo electrónico ya está registrado en otro huésped.');
+
+                                return;
+                            }
+
+                            $existeUsuario = User::withTrashed()
+                                ->whereRaw('LOWER(email) = ?', [$correo])
+                                ->when($record?->user_id, fn ($query) => $query->whereKeyNot($record->user_id))
+                                ->exists();
+
+                            if ($existeUsuario) {
+                                $fail('El correo electrónico ya pertenece a un usuario del sistema.');
+                            }
+                        },
+                    ])
                     ->maxLength(255),
 
                 Select::make('nacionalidad')
@@ -96,5 +133,12 @@ class HuespedForm
                     ->default(true)
                     ->required(),
             ]);
+    }
+
+    private static function normalizarCorreo(?string $correo): ?string
+    {
+        $correo = trim((string) $correo);
+
+        return $correo === '' ? null : mb_strtolower($correo);
     }
 }

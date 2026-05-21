@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Mail\CredencialesUsuarioMail;
+use App\Models\Huesped;
 use App\Models\Role;
 use App\Support\LogSistema;
 use Filament\Facades\Filament;
@@ -25,6 +26,7 @@ class CreateUser extends CreateRecord
     {
         $user = Filament::auth()->user();
         $role = Role::find($data['role_id'] ?? null);
+        $data['email'] = $this->normalizarCorreo($data['email'] ?? null);
 
         if (! $user?->role || ! $role) {
             throw ValidationException::withMessages([
@@ -41,6 +43,12 @@ class CreateUser extends CreateRecord
         if (! in_array($role->nombre, $rolesPermitidos, true)) {
             throw ValidationException::withMessages([
                 'role_id' => 'No puedes asignar este rol.',
+            ]);
+        }
+
+        if (Huesped::withTrashed()->whereRaw('LOWER(correo_electronico) = ?', [$data['email']])->exists()) {
+            throw ValidationException::withMessages([
+                'email' => 'El correo electrónico ya está registrado en huéspedes.',
             ]);
         }
 
@@ -82,6 +90,11 @@ class CreateUser extends CreateRecord
                 'Usuarios',
                 'Correo de credenciales enviado a ' . $this->record->email . ' para el usuario ' . $this->record->name . '.'
             );
+
+            Notification::make()
+                ->success()
+                ->title('Usuario creado correctamente. Se enviaron las credenciales al correo registrado.')
+                ->send();
         } catch (Throwable $e) {
             LogSistema::registrar(
                 'ERROR_ENVIO_CREDENCIALES',
@@ -101,5 +114,12 @@ class CreateUser extends CreateRecord
         return $rol === 'HUESPED'
             ? 'http://127.0.0.1:5173/login'
             : 'http://127.0.0.1:8000/admin';
+    }
+
+    private function normalizarCorreo(?string $correo): ?string
+    {
+        $correo = trim((string) $correo);
+
+        return $correo === '' ? null : mb_strtolower($correo);
     }
 }
