@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\CambiarPassword;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\Auth\Login;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -32,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->globalSearch(false)
             ->colors([
                 'primary' => Color::Green,
@@ -95,9 +96,15 @@ class AdminPanelProvider extends PanelProvider
                 ),
             )
             ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn (): HtmlString => new HtmlString(
+                    Blade::render('@include("filament.admin.login-hero")'),
+                ),
+            )
+            ->renderHook(
                 PanelsRenderHook::STYLES_AFTER,
                 fn (): HtmlString => new HtmlString(
-                    '<link rel="stylesheet" href="' . asset('css/filament/admin-dashboard.css') . '?v=1">' .
+                    '<link rel="stylesheet" href="' . asset('css/filament/admin-dashboard.css') . '?v=4">' .
                     CambiarPassword::modalStyles()
                 ),
             )

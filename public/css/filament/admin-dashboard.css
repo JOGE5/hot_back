@@ -3,6 +3,169 @@
     --admin-dashboard-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
 }
 
+.fi-simple-layout:has(.hot-admin-login-hero) {
+    min-height: 100vh;
+    background:
+        linear-gradient(145deg, rgba(12, 34, 26, 0.96), rgba(65, 43, 25, 0.90)),
+        radial-gradient(circle at 50% 0%, rgba(209, 173, 97, 0.28), transparent 36%),
+        radial-gradient(circle at 100% 100%, rgba(250, 241, 222, 0.12), transparent 30%),
+        #10281f;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-main-ctn {
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-main {
+    width: min(100%, 420px);
+    max-width: 420px;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-page {
+    overflow: hidden;
+    border: 1px solid rgba(209, 173, 97, 0.40);
+    border-radius: 1.35rem;
+    background: #fbf3e4;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.30);
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-page-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 2rem;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-header {
+    padding: 1.15rem 0 0.9rem;
+    text-align: center;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-logo,
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-header .fi-logo {
+    color: #174333;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-header-heading {
+    color: #174333;
+    font-size: 1.7rem;
+    line-height: 1.1;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-header-subheading {
+    color: #6b6254;
+    margin-inline: auto;
+    max-width: 19rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-sc-form {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-sc-form .fi-sc {
+    gap: 1rem;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-input-wrp {
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 0 0 1px rgba(23, 67, 51, 0.12);
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-input-wrp:focus-within {
+    box-shadow:
+        0 0 0 1px #d1ad61,
+        0 0 0 4px rgba(209, 173, 97, 0.18);
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-input {
+    min-height: 3rem;
+    padding-block: 0.85rem;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-sc-form .fi-btn {
+    min-height: 3rem;
+    border-radius: 999px;
+    background: #174333;
+    box-shadow: 0 12px 26px rgba(23, 67, 51, 0.22);
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-sc-form .fi-btn:hover {
+    background: #2f5b45;
+}
+
+.hot-admin-login-hero {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    color: #174333;
+}
+
+.hot-admin-login-hero::before {
+    display: none;
+}
+
+.hot-admin-login-hero::after {
+    display: none;
+}
+
+.hot-admin-login-hero-mark {
+    display: flex;
+    height: 5rem;
+    width: 5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(209, 173, 97, 0.62);
+    border-radius: 1.25rem;
+    background: #fffaf0;
+    box-shadow: 0 14px 28px rgba(23, 67, 51, 0.22);
+}
+
+.hot-admin-login-hero-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 1;
+}
+
+.hot-admin-login-hero-content {
+    max-width: 18rem;
+    text-align: center;
+}
+
+.hot-admin-login-hero-kicker {
+    margin: 0;
+    color: #8a6428;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 860px) {
+    .fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-main-ctn {
+        padding: 1rem;
+    }
+
+    .fi-simple-layout:has(.hot-admin-login-hero) .fi-simple-page-content {
+        padding: 1.45rem;
+    }
+}
+
 .admin-metrics-dashboard .fi-page-header-main-ctn {
     gap: 1.35rem;
 }
