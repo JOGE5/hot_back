@@ -19,6 +19,9 @@ class PaquetesTable
                 'xl' => 3,
             ])
             ->recordClasses('!bg-transparent !shadow-none !ring-0 !p-0')
+            ->recordAction(null)
+            ->recordUrl(null)
+            ->selectable(false)
             ->columns([
                 View::make('filament.resources.paquetes.card')
                     ->components([

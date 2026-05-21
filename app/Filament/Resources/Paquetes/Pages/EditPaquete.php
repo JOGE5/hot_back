@@ -14,8 +14,10 @@ class EditPaquete extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
-            RestoreAction::make(),
+            DeleteAction::make()
+                ->visible(fn (): bool => PaqueteResource::canDelete($this->record)),
+            RestoreAction::make()
+                ->visible(fn (): bool => PaqueteResource::canRestore($this->record)),
         ];
     }
 }
