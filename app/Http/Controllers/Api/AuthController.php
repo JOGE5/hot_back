@@ -5,9 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
+    private const MAX_LOGIN_ATTEMPTS = 4;
+
+    private const LOGIN_DECAY_SECONDS = 900;
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -15,11 +20,28 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (! Auth::attempt($credentials)) {
+        $rateLimitKey = $this->loginRateLimitKey($request, $credentials['email']);
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, self::MAX_LOGIN_ATTEMPTS)) {
             return response()->json([
-                'message' => 'Credenciales incorrectas.',
+                'message' => 'Demasiados intentos fallidos. Intenta nuevamente en unos minutos.',
+                'bloqueado' => true,
+            ], 429);
+        }
+
+        if (! Auth::attempt($credentials)) {
+            RateLimiter::hit($rateLimitKey, self::LOGIN_DECAY_SECONDS);
+
+            return response()->json([
+                'message' => 'Correo o contraseña incorrectos.',
+                'intentos_restantes' => max(
+                    0,
+                    self::MAX_LOGIN_ATTEMPTS - RateLimiter::attempts($rateLimitKey)
+                ),
             ], 401);
         }
+
+        RateLimiter::clear($rateLimitKey);
 
         $user = $request->user()->load('role');
 
@@ -86,5 +108,10 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Sesión cerrada correctamente.',
         ]);
+    }
+
+    private function loginRateLimitKey(Request $request, string $email): string
+    {
+        return strtolower($email) . '|' . $request->ip();
     }
 }

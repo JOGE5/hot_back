@@ -301,7 +301,7 @@
                         @endif
                     </div>
                     <div style="text-align: right;">
-                        <div class="historial-status mb-2" style="{{ $statusColor }}">
+                        <div class="historial-status mb-2" style="{!! $statusColor !!}">
                             {{ $reservacion->estado_reservacion }}
                         </div>
                         @if($reservacion->codigo_checkout)
