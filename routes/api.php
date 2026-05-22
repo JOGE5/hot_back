@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/habitaciones-disponibles', [HuespedController::class, 'habitacionesDisponibles']);
         Route::get('/mis-reservaciones', [HuespedController::class, 'misReservaciones']);
         Route::post('/reservaciones', [HuespedController::class, 'crearReservacion']);
+        Route::patch('/reservaciones/{reservacion}/cancelar', [HuespedController::class, 'cancelarReservacion']);
+        Route::patch('/reservaciones/{reservacion}/posponer', [HuespedController::class, 'posponerReservacion']);
         Route::get('/menu-del-dia', [HuespedController::class, 'menuDelDia']);
         Route::get('/paquetes', [HuespedController::class, 'paquetes']);
     });

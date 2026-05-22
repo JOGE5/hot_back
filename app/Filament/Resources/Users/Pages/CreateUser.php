@@ -26,6 +26,7 @@ class CreateUser extends CreateRecord
     {
         $user = Filament::auth()->user();
         $role = Role::find($data['role_id'] ?? null);
+        $data = $this->normalizarDatosPersonales($data);
         $data['email'] = $this->normalizarCorreo($data['email'] ?? null);
 
         if (! $user?->role || ! $role) {
@@ -121,5 +122,23 @@ class CreateUser extends CreateRecord
         $correo = trim((string) $correo);
 
         return $correo === '' ? null : mb_strtolower($correo);
+    }
+
+    private function normalizarDatosPersonales(array $data): array
+    {
+        foreach (['nombres', 'apellido_paterno', 'apellido_materno'] as $campo) {
+            if (array_key_exists($campo, $data)) {
+                $data[$campo] = $this->normalizarTexto($data[$campo] ?? null);
+            }
+        }
+
+        return $data;
+    }
+
+    private function normalizarTexto(?string $texto): ?string
+    {
+        $texto = trim((string) $texto);
+
+        return $texto === '' ? null : $texto;
     }
 }

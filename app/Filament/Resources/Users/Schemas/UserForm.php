@@ -42,20 +42,35 @@ class UserForm
                     ->searchable()
                     ->preload(),
 
-                   TextInput::make('nombres')
-                        ->label('Nombres')
-                        ->required()
-                        ->maxLength(255),
+                TextInput::make('nombres')
+                    ->label('Nombres')
+                    ->required()
+                    ->minLength(2)
+                    ->maxLength(60)
+                    ->rules(['regex:/^[\pL\pM]+(?:\s+[\pL\pM]+)*$/u'])
+                    ->validationMessages([
+                        'regex' => 'El nombre solo puede contener letras y espacios.',
+                    ]),
 
-                    TextInput::make('apellido_paterno')
-                        ->label('Apellido paterno')
-                        ->required()
-                        ->maxLength(255),
+                TextInput::make('apellido_paterno')
+                    ->label('Apellido paterno')
+                    ->required()
+                    ->minLength(2)
+                    ->maxLength(60)
+                    ->rules(['regex:/^[\pL\pM]+(?:\s+[\pL\pM]+)*$/u'])
+                    ->validationMessages([
+                        'regex' => 'El apellido solo puede contener letras y espacios.',
+                    ]),
 
-                    TextInput::make('apellido_materno')
-                        ->label('Apellido materno')
-                        ->nullable()
-                        ->maxLength(255),
+                TextInput::make('apellido_materno')
+                    ->label('Apellido materno')
+                    ->nullable()
+                    ->minLength(2)
+                    ->maxLength(60)
+                    ->rules(['regex:/^[\pL\pM]+(?:\s+[\pL\pM]+)*$/u'])
+                    ->validationMessages([
+                        'regex' => 'El apellido solo puede contener letras y espacios.',
+                    ]),
 
                 TextInput::make('email')
                     ->label('Correo electrónico')

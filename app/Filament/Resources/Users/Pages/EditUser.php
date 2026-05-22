@@ -45,6 +45,7 @@ class EditUser extends EditRecord
         $user = Filament::auth()->user();
         $record = $this->record;
         $role = Role::find($data['role_id'] ?? null);
+        $data = $this->normalizarDatosPersonales($data);
 
         if (! $user?->role || ! $record->role || ! $role) {
             throw ValidationException::withMessages([
@@ -109,5 +110,23 @@ class EditUser extends EditRecord
                 'Rol cambiado para ' . $this->record->name . ': ' . $this->rolAnterior . ' -> ' . $rolActual . '.'
             );
         }
+    }
+
+    private function normalizarDatosPersonales(array $data): array
+    {
+        foreach (['nombres', 'apellido_paterno', 'apellido_materno'] as $campo) {
+            if (array_key_exists($campo, $data)) {
+                $data[$campo] = $this->normalizarTexto($data[$campo] ?? null);
+            }
+        }
+
+        return $data;
+    }
+
+    private function normalizarTexto(?string $texto): ?string
+    {
+        $texto = trim((string) $texto);
+
+        return $texto === '' ? null : $texto;
     }
 }

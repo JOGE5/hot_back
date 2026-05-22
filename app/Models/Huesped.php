@@ -25,11 +25,14 @@ class Huesped extends Model
         'nacionalidad',
         'fecha_nacimiento',
         'estado',
+        'papelera_vaciada_at',
+        'papelera_vaciada_por',
     ];
 
     protected $casts = [
         'fecha_nacimiento' => 'date',
         'estado' => 'boolean',
+        'papelera_vaciada_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

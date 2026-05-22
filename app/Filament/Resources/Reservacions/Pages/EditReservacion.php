@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Reservacions\Pages;
 
 use App\Filament\Resources\Reservacions\ReservacionResource;
 use App\Http\Controllers\Admin\ReciboReservacionController;
+use App\Models\Habitacion;
 use App\Models\Reservacion;
 use App\Support\LogSistema;
 use Filament\Actions\Action;
@@ -11,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Validation\ValidationException;
 
 class EditReservacion extends EditRecord
 {
@@ -57,36 +59,36 @@ class EditReservacion extends EditRecord
         $cantidadPersonas = $data['cantidad_personas'] ?? null;
 
         if ($huespedId) {
-            $tieneReservaActiva = \App\Models\Reservacion::query()
+            $tieneReservaActiva = Reservacion::query()
                 ->where('huesped_id', $huespedId)
                 ->where('id', '!=', $this->record->id)
-                ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
+                ->bloqueantesDisponibilidad()
                 ->exists();
 
             if ($tieneReservaActiva) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'huesped_id' => 'Este huésped ya tiene una reservación activa. Debe finalizarla o cancelarla antes de crear otra.',
                 ]);
             }
         }
 
         if ($habitacionId && $fechaEntrada && $fechaSalida) {
-            $habitacion = \App\Models\Habitacion::find($habitacionId);
+            $habitacion = Habitacion::find($habitacionId);
 
             if (!$habitacion) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'habitacion_id' => 'La habitación seleccionada no existe.',
                 ]);
             }
 
             if (in_array($habitacion->estado, ['Mantenimiento', 'Inactiva'])) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'habitacion_id' => 'La habitación seleccionada no está disponible (Estado actual: ' . $habitacion->estado . ').',
                 ]);
             }
 
             if ($cantidadPersonas > $habitacion->capacidad) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'cantidad_personas' => "La cantidad de personas ($cantidadPersonas) supera la capacidad máxima de la habitación ({$habitacion->capacidad}).",
                 ]);
             }
@@ -95,41 +97,40 @@ class EditReservacion extends EditRecord
             $fin = \Carbon\Carbon::parse($fechaSalida);
 
             if ($fin->lessThanOrEqualTo($inicio)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'fecha_salida' => 'La fecha de salida debe ser mayor a la fecha de entrada.',
                 ]);
             }
 
             if ($fin->diffInYears($inicio) > 2) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'fecha_salida' => 'La fecha de salida no puede exceder 2 años desde la fecha de entrada.',
                 ]);
             }
 
-            $cruce = \App\Models\Reservacion::query()
-                ->where('habitacion_id', $habitacionId)
-                ->where('id', '!=', $this->record->id)
-                ->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
-                ->where('fecha_entrada', '<', $fechaSalida)
-                ->where('fecha_salida', '>', $fechaEntrada)
-                ->exists();
+            $cruce = Reservacion::habitacionTieneConflictoDisponibilidad(
+                $habitacionId,
+                $fechaEntrada,
+                $fechaSalida,
+                $this->record->id,
+            );
 
             if ($cruce) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'fecha_salida' => 'La habitación ya tiene una reservación activa en las fechas seleccionadas.',
+                throw ValidationException::withMessages([
+                    'fecha_salida' => Reservacion::MENSAJE_HABITACION_NO_DISPONIBLE,
                 ]);
             }
 
             $noches = $inicio->diffInDays($fin);
             if ($noches <= 0) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'fecha_salida' => 'La cantidad de noches debe ser mayor a 0.',
                 ]);
             }
 
             $data['total'] = $habitacion->precio_noche * $noches;
         } else {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'habitacion_id' => 'Faltan datos para la reservación (habitación, fechas).',
             ]);
         }

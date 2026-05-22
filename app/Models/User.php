@@ -24,6 +24,8 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'estado',
+        'papelera_vaciada_at',
+        'papelera_vaciada_por',
     ];
 
     protected $hidden = [
@@ -37,6 +39,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'estado' => 'boolean',
+            'papelera_vaciada_at' => 'datetime',
         ];
     }
 

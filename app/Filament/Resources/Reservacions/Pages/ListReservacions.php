@@ -2,10 +2,18 @@
 
 namespace App\Filament\Resources\Reservacions\Pages;
 
+use App\Exports\ReporteDinamicoExport;
 use App\Filament\Resources\Reservacions\ReservacionResource;
 use App\Models\Reservacion;
+use App\Support\Admin\ReporteDinamicoService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListReservacions extends Page
 {
@@ -20,29 +28,32 @@ class ListReservacions extends Page
     public ?string $estado_pago = null;
     public ?string $origen_reservacion = null;
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('reporte_dinamico_pdf')
+                ->label('Reporte dinámico PDF')
+                ->color('danger')
+                ->icon('heroicon-o-document-text')
+                ->form($this->formularioReporteDinamico('reservaciones'))
+                ->modalSubmitActionLabel('Generar PDF')
+                ->visible(fn (): bool => $this->puedeGenerarReportesDinamicos())
+                ->action(fn (array $data): mixed => $this->generarReporteDinamicoPdf('reservaciones', 'Reporte dinámico de reservaciones', $data)),
+
+            Action::make('reporte_dinamico_excel')
+                ->label('Reporte dinámico Excel')
+                ->color('success')
+                ->icon('heroicon-o-document-arrow-down')
+                ->form($this->formularioReporteDinamico('reservaciones'))
+                ->modalSubmitActionLabel('Generar Excel')
+                ->visible(fn (): bool => $this->puedeGenerarReportesDinamicos())
+                ->action(fn (array $data): mixed => $this->generarReporteDinamicoExcel('reservaciones', 'reporte_dinamico_reservaciones', $data)),
+        ];
+    }
+
     public function getReservacionesProperty()
     {
-        return Reservacion::query()
-            ->with(['huesped', 'habitacion'])
-            ->when($this->buscar, function (Builder $query, $buscar) {
-                $query->whereHas('huesped', function (Builder $q) use ($buscar) {
-                    $q->where('nombres', 'like', "%{$buscar}%")
-                        ->orWhere('apellido_paterno', 'like', "%{$buscar}%")
-                        ->orWhere('apellido_materno', 'like', "%{$buscar}%")
-                        ->orWhere('numero_documento', 'like', "%{$buscar}%");
-                })->orWhereHas('habitacion', function (Builder $q) use ($buscar) {
-                    $q->where('numero', 'like', "%{$buscar}%");
-                });
-            })
-            ->when($this->estado_reservacion, function (Builder $query, $estado) {
-                $query->where('estado_reservacion', $estado);
-            })
-            ->when($this->estado_pago, function (Builder $query, $estado) {
-                $query->where('estado_pago', $estado);
-            })
-            ->when($this->origen_reservacion, function (Builder $query, $origen) {
-                $query->where('origen_reservacion', $origen);
-            })
+        return $this->reservacionesReporteQuery()
             ->orderBy('fecha_entrada', 'desc')
             ->paginate(12);
     }
@@ -52,5 +63,115 @@ class ListReservacions extends Page
         $this->origen_reservacion = $this->origen_reservacion === $origen
             ? null
             : $origen;
+    }
+
+    private function reservacionesReporteQuery(): Builder
+    {
+        return Reservacion::query()
+            ->with([
+                'huesped' => fn ($query) => $query->withTrashed(),
+                'habitacion' => fn ($query) => $query->withTrashed(),
+            ])
+            ->when($this->buscar, function (Builder $query, $buscar): Builder {
+                return $query->where(function (Builder $query) use ($buscar): void {
+                    $query->whereHas('huesped', function (Builder $q) use ($buscar): void {
+                        $q->withTrashed()
+                            ->where('nombres', 'like', "%{$buscar}%")
+                            ->orWhere('apellido_paterno', 'like', "%{$buscar}%")
+                            ->orWhere('apellido_materno', 'like', "%{$buscar}%")
+                            ->orWhere('numero_documento', 'like', "%{$buscar}%");
+                    })->orWhereHas('habitacion', function (Builder $q) use ($buscar): void {
+                        $q->withTrashed()->where('numero', 'like', "%{$buscar}%");
+                    });
+                });
+            })
+            ->when($this->estado_reservacion, fn (Builder $query, string $estado): Builder => $query->where('estado_reservacion', $estado))
+            ->when($this->estado_pago, fn (Builder $query, string $estado): Builder => $query->where('estado_pago', $estado))
+            ->when($this->origen_reservacion, fn (Builder $query, string $origen): Builder => $query->where('origen_reservacion', $origen));
+    }
+
+    private function formularioReporteDinamico(string $modulo): array
+    {
+        return [
+            CheckboxList::make('columnas')
+                ->label('Columnas a incluir')
+                ->options(app(ReporteDinamicoService::class)->columnasPermitidas($modulo))
+                ->columns(2)
+                ->bulkToggleable(),
+        ];
+    }
+
+    private function generarReporteDinamicoPdf(string $modulo, string $titulo, array $data): mixed
+    {
+        $columnas = $this->columnasSeleccionadas($modulo, $data);
+
+        if (empty($columnas)) {
+            return $this->notificarColumnasRequeridas();
+        }
+
+        $registros = $this->reservacionesReporteQuery()
+            ->orderBy('fecha_entrada', 'desc')
+            ->get();
+        $service = app(ReporteDinamicoService::class);
+        $user = Filament::auth()->user();
+
+        $pdf = Pdf::loadView('reportes.reporte-dinamico', [
+            'titulo' => $titulo,
+            'fechaGeneracion' => now()->format('d/m/Y H:i'),
+            'usuarioGenerador' => trim(($user?->name ?? 'Usuario') . ' (' . ($user?->email ?? 'sin correo') . ')'),
+            'columnas' => $columnas,
+            'filas' => $service->filas($modulo, $registros, $columnas),
+        ])->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            $this->nombreArchivo($modulo, 'pdf')
+        );
+    }
+
+    private function generarReporteDinamicoExcel(string $modulo, string $nombreBase, array $data): mixed
+    {
+        $columnas = $this->columnasSeleccionadas($modulo, $data);
+
+        if (empty($columnas)) {
+            return $this->notificarColumnasRequeridas();
+        }
+
+        $registros = $this->reservacionesReporteQuery()
+            ->orderBy('fecha_entrada', 'desc')
+            ->get();
+
+        return Excel::download(
+            new ReporteDinamicoExport($modulo, $registros, $columnas),
+            $nombreBase . '_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
+
+    private function columnasSeleccionadas(string $modulo, array $data): array
+    {
+        return app(ReporteDinamicoService::class)
+            ->columnasSeleccionadas($modulo, $data['columnas'] ?? []);
+    }
+
+    private function notificarColumnasRequeridas(): null
+    {
+        Notification::make()
+            ->title('Selecciona al menos una columna para generar el reporte.')
+            ->warning()
+            ->send();
+
+        return null;
+    }
+
+    private function nombreArchivo(string $modulo, string $extension): string
+    {
+        return 'reporte_dinamico_' . $modulo . '_' . now()->format('Ymd_His') . '.' . $extension;
+    }
+
+    private function puedeGenerarReportesDinamicos(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user?->role && in_array($user->role->nombre, ['SUPER ADMIN', 'ADMIN'], true);
     }
 }

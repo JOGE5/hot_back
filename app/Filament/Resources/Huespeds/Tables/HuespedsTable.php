@@ -9,6 +9,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class HuespedsTable
 {
@@ -70,6 +71,9 @@ class HuespedsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->searchable([
+                fn (Builder $query, string $search): Builder => self::aplicarBusquedaAvanzada($query, $search),
+            ])
             ->filters([
                 TernaryFilter::make('estado')
                     ->label('Estado')
@@ -86,5 +90,39 @@ class HuespedsTable
                     ->visible(fn ($record): bool => HuespedResource::canEdit($record)),
             ])
             ->toolbarActions([]);
+    }
+
+    private static function aplicarBusquedaAvanzada(Builder $query, string $search): Builder
+    {
+        $search = trim($search);
+        $like = '%' . mb_strtolower($search) . '%';
+        $estado = self::estadoDesdeBusqueda($search);
+
+        return $query
+            ->whereRaw('LOWER(nombres) LIKE ?', [$like])
+            ->orWhereRaw('LOWER(apellido_paterno) LIKE ?', [$like])
+            ->orWhereRaw('LOWER(apellido_materno) LIKE ?', [$like])
+            ->orWhereRaw("LOWER(CONCAT_WS(' ', nombres, apellido_paterno, apellido_materno)) LIKE ?", [$like])
+            ->orWhereRaw('LOWER(numero_documento) LIKE ?', [$like])
+            ->orWhereRaw('LOWER(telefono) LIKE ?', [$like])
+            ->orWhereRaw('LOWER(correo_electronico) LIKE ?', [$like])
+            ->orWhereRaw('LOWER(nacionalidad) LIKE ?', [$like])
+            ->orWhereRaw("DATE_FORMAT(fecha_nacimiento, '%Y-%m-%d') LIKE ?", [$like])
+            ->orWhereRaw("DATE_FORMAT(fecha_nacimiento, '%d/%m/%Y') LIKE ?", [$like])
+            ->when(
+                $estado !== null,
+                fn (Builder $query): Builder => $query->orWhere('estado', $estado)
+            );
+    }
+
+    private static function estadoDesdeBusqueda(string $search): ?bool
+    {
+        $search = mb_strtolower(trim($search));
+
+        return match ($search) {
+            'activo', 'activa', '1', 'si' => true,
+            'inactivo', 'inactiva', '0', 'no' => false,
+            default => null,
+        };
     }
 }

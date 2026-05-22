@@ -20,17 +20,32 @@ class HuespedForm
                 TextInput::make('nombres')
                     ->label('Nombres')
                     ->required()
-                    ->maxLength(255),
+                    ->minLength(2)
+                    ->maxLength(60)
+                    ->rules(['regex:/^[\pL\pM]+(?:\s+[\pL\pM]+)*$/u'])
+                    ->validationMessages([
+                        'regex' => 'El nombre solo puede contener letras y espacios.',
+                    ]),
 
                 TextInput::make('apellido_paterno')
                     ->label('Apellido paterno')
                     ->required()
-                    ->maxLength(255),
+                    ->minLength(2)
+                    ->maxLength(60)
+                    ->rules(['regex:/^[\pL\pM]+(?:\s+[\pL\pM]+)*$/u'])
+                    ->validationMessages([
+                        'regex' => 'El apellido solo puede contener letras y espacios.',
+                    ]),
 
                 TextInput::make('apellido_materno')
                     ->label('Apellido materno')
                     ->nullable()
-                    ->maxLength(255),
+                    ->minLength(2)
+                    ->maxLength(60)
+                    ->rules(['regex:/^[\pL\pM]+(?:\s+[\pL\pM]+)*$/u'])
+                    ->validationMessages([
+                        'regex' => 'El apellido solo puede contener letras y espacios.',
+                    ]),
 
                 Select::make('tipo_documento')
                     ->label('Tipo de documento')
@@ -52,7 +67,12 @@ class HuespedForm
                     ->label('Teléfono')
                     ->tel()
                     ->nullable()
-                    ->maxLength(30),
+                    ->maxLength(15)
+                    ->rules(['regex:/^\+?[0-9]+$/'])
+                    ->validationMessages([
+                        'regex' => 'El teléfono solo puede contener números y opcionalmente el signo + al inicio.',
+                        'max' => 'El teléfono no debe superar los 15 caracteres.',
+                    ]),
 
                 TextInput::make('correo_electronico')
                     ->label('Correo electrónico')

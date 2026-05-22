@@ -42,7 +42,12 @@ class HistorialCheckIn extends Page
     public function getReservacionesProperty()
     {
         $query = Reservacion::query()
-            ->with(['huesped', 'habitacion', 'checkinUser', 'checkoutUser'])
+            ->with([
+                'huesped' => fn ($query) => $query->withTrashed(),
+                'habitacion' => fn ($query) => $query->withTrashed(),
+                'checkinUser' => fn ($query) => $query->withTrashed(),
+                'checkoutUser' => fn ($query) => $query->withTrashed(),
+            ])
             ->whereNotNull('checkin_at')
             ->whereIn('estado_reservacion', ['En estadía', 'Finalizada']);
 
@@ -52,13 +57,14 @@ class HistorialCheckIn extends Page
                 $q->where('codigo_checkin', 'like', $busqueda)
                   ->orWhere('codigo_checkout', 'like', $busqueda)
                   ->orWhereHas('huesped', function (Builder $h) use ($busqueda) {
-                      $h->where('nombres', 'like', $busqueda)
+                      $h->withTrashed()
+                        ->where('nombres', 'like', $busqueda)
                         ->orWhere('apellido_paterno', 'like', $busqueda)
                         ->orWhere('apellido_materno', 'like', $busqueda)
                         ->orWhere('numero_documento', 'like', $busqueda);
                   })
                   ->orWhereHas('habitacion', function (Builder $hab) use ($busqueda) {
-                      $hab->where('numero', 'like', $busqueda);
+                      $hab->withTrashed()->where('numero', 'like', $busqueda);
                   });
             });
         }

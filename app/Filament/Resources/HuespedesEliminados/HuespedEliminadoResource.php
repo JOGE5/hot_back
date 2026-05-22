@@ -116,6 +116,12 @@ class HuespedEliminadoResource extends Resource
                     ->label('Dado de baja en')
                     ->dateTime()
                     ->sortable(),
+
+                TextColumn::make('papelera_vaciada_at')
+                    ->label('Papelera vaciada en')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -145,7 +151,9 @@ class HuespedEliminadoResource extends Resource
     {
         $user = Filament::auth()->user();
 
-        $query = Huesped::query()->onlyTrashed();
+        $query = Huesped::query()
+            ->onlyTrashed()
+            ->whereNull('papelera_vaciada_at');
 
         if (! $user?->role) {
             return $query->whereRaw('1 = 0');

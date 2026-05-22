@@ -251,7 +251,7 @@ class ReservacionForm
 
                         Select::make('habitacion_id')
                             ->label('Habitación')
-                            ->options(function (Get $get) {
+                            ->options(function (Get $get, ?Reservacion $record = null) {
                                 $query = Habitacion::query()
                                     ->where('activo', true)
                                     ->where('estado', 'Disponible');
@@ -273,10 +273,12 @@ class ReservacionForm
                                 $fechaEntrada = $get('fecha_entrada');
                                 $fechaSalida = $get('fecha_salida');
                                 if ($fechaEntrada && $fechaSalida) {
-                                    $query->whereDoesntHave('reservaciones', function ($q) use ($fechaEntrada, $fechaSalida) {
-                                        $q->whereIn('estado_reservacion', ['Pendiente de pago', 'Confirmada', 'En estadía'])
-                                          ->where('fecha_entrada', '<', $fechaSalida)
-                                          ->where('fecha_salida', '>', $fechaEntrada);
+                                    $query->whereDoesntHave('reservaciones', function ($q) use ($fechaEntrada, $fechaSalida, $record) {
+                                        $q->conConflictoDisponibilidad(
+                                            $fechaEntrada,
+                                            $fechaSalida,
+                                            $record?->id,
+                                        );
                                     });
                                 }
 

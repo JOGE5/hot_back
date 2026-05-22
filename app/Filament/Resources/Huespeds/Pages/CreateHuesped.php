@@ -28,6 +28,7 @@ class CreateHuesped extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data = $this->normalizarDatosPersonales($data);
         $data['correo_electronico'] = $this->normalizarCorreo($data['correo_electronico'] ?? null);
 
         if (($data['nacionalidad'] ?? '') === 'Otra') {
@@ -132,6 +133,24 @@ class CreateHuesped extends CreateRecord
         $correo = trim((string) $correo);
 
         return $correo === '' ? null : mb_strtolower($correo);
+    }
+
+    private function normalizarDatosPersonales(array $data): array
+    {
+        foreach (['nombres', 'apellido_paterno', 'apellido_materno', 'telefono'] as $campo) {
+            if (array_key_exists($campo, $data)) {
+                $data[$campo] = $this->normalizarTexto($data[$campo] ?? null);
+            }
+        }
+
+        return $data;
+    }
+
+    private function normalizarTexto(?string $texto): ?string
+    {
+        $texto = trim((string) $texto);
+
+        return $texto === '' ? null : $texto;
     }
 
     private function nombreCompleto(array $data): string

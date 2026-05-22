@@ -116,6 +116,12 @@ class UsuarioEliminadoResource extends Resource
                     ->dateTime()
                     ->sortable(),
 
+                TextColumn::make('papelera_vaciada_at')
+                    ->label('Papelera vaciada en')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime()
@@ -150,6 +156,7 @@ class UsuarioEliminadoResource extends Resource
 
         $query = User::query()
             ->onlyTrashed()
+            ->whereNull('papelera_vaciada_at')
             ->whereHas('role', function (Builder $query) {
                 $query->whereIn('nombre', self::ROLES_ADMINISTRATIVOS);
             });

@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Log;
 
 class HuespedController extends Controller
 {
+    private const ESTADOS_RESERVACION_MODIFICABLES_POR_HUESPED = [
+        'Pendiente de pago',
+        'Confirmada',
+    ];
+
     public function cambiarPassword(Request $request)
     {
         $data = $request->validate([
@@ -102,14 +107,10 @@ class HuespedController extends Controller
                 ! empty($data['fecha_entrada']) && ! empty($data['fecha_salida']),
                 function ($query) use ($data) {
                     $query->whereDoesntHave('reservaciones', function ($reservacionQuery) use ($data) {
-                        $reservacionQuery
-                            ->whereIn('estado_reservacion', [
-                                'Pendiente de pago',
-                                'Confirmada',
-                                'En estadía',
-                            ])
-                            ->where('fecha_entrada', '<', $data['fecha_salida'])
-                            ->where('fecha_salida', '>', $data['fecha_entrada']);
+                        $reservacionQuery->conConflictoDisponibilidad(
+                            $data['fecha_entrada'],
+                            $data['fecha_salida'],
+                        );
                     });
                 }
             )
@@ -205,19 +206,13 @@ class HuespedController extends Controller
 
             $existeSolapamiento = Reservacion::query()
                 ->where('habitacion_id', $habitacion->id)
-                ->whereIn('estado_reservacion', [
-                    'Pendiente de pago',
-                    'Confirmada',
-                    'En estadía',
-                ])
-                ->where('fecha_entrada', '<', $fechaSalida->toDateString())
-                ->where('fecha_salida', '>', $fechaEntrada->toDateString())
+                ->conConflictoDisponibilidad($fechaEntrada->toDateString(), $fechaSalida->toDateString())
                 ->lockForUpdate()
                 ->exists();
 
             if ($existeSolapamiento) {
                 return response()->json([
-                    'message' => 'La habitación ya tiene una reservación activa en esas fechas.',
+                    'message' => Reservacion::MENSAJE_HABITACION_NO_DISPONIBLE,
                 ], 422);
             }
 
@@ -247,6 +242,142 @@ class HuespedController extends Controller
             'message' => 'Reservación creada correctamente.',
             'reservacion' => $reservacion,
         ], 201);
+    }
+
+    public function cancelarReservacion(Request $request, Reservacion $reservacion)
+    {
+        $data = $request->validate([
+            'motivo' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $huesped = $this->huespedAutenticado($request);
+
+        if ($huesped instanceof \Illuminate\Http\JsonResponse) {
+            return $huesped;
+        }
+
+        if (! $this->reservacionPerteneceAlHuesped($reservacion, $huesped->id)) {
+            return response()->json([
+                'message' => 'No tienes permisos para modificar esta reservaciÃ³n.',
+            ], 403);
+        }
+
+        if (! $this->reservacionPuedeSerModificadaPorHuesped($reservacion)) {
+            return response()->json([
+                'message' => 'Esta reservaciÃ³n no puede ser cancelada en su estado actual.',
+            ], 422);
+        }
+
+        $reservacion->estado_reservacion = 'Cancelada';
+
+        if (! empty($data['motivo'])) {
+            $reservacion->observacion = $data['motivo'];
+        }
+
+        $reservacion->save();
+
+        return response()->json([
+            'message' => 'ReservaciÃ³n cancelada correctamente.',
+        ]);
+    }
+
+    public function posponerReservacion(Request $request, Reservacion $reservacion)
+    {
+        $data = $request->validate([
+            'fecha_entrada' => ['required', 'date', 'after_or_equal:today'],
+            'fecha_salida' => ['required', 'date', 'after:fecha_entrada'],
+        ]);
+
+        $huesped = $this->huespedAutenticado($request);
+
+        if ($huesped instanceof \Illuminate\Http\JsonResponse) {
+            return $huesped;
+        }
+
+        if (! $this->reservacionPerteneceAlHuesped($reservacion, $huesped->id)) {
+            return response()->json([
+                'message' => 'No tienes permisos para modificar esta reservaciÃ³n.',
+            ], 403);
+        }
+
+        if (! $this->reservacionPuedeSerModificadaPorHuesped($reservacion)) {
+            return response()->json([
+                'message' => 'Esta reservaciÃ³n no puede ser pospuesta en su estado actual.',
+            ], 422);
+        }
+
+        $fechaEntrada = Carbon::parse($data['fecha_entrada'])->startOfDay();
+        $fechaSalida = Carbon::parse($data['fecha_salida'])->startOfDay();
+
+        $resultado = DB::transaction(function () use ($reservacion, $fechaEntrada, $fechaSalida) {
+            $reservacion = Reservacion::query()
+                ->with('habitacion')
+                ->whereKey($reservacion->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $this->reservacionPuedeSerModificadaPorHuesped($reservacion)) {
+                return response()->json([
+                    'message' => 'Esta reservaciÃ³n no puede ser pospuesta en su estado actual.',
+                ], 422);
+            }
+
+            $existeSolapamiento = Reservacion::habitacionTieneConflictoDisponibilidad(
+                $reservacion->habitacion_id,
+                $fechaEntrada->toDateString(),
+                $fechaSalida->toDateString(),
+                $reservacion->id,
+            );
+
+            if ($existeSolapamiento) {
+                return response()->json([
+                    'message' => Reservacion::MENSAJE_HABITACION_NO_DISPONIBLE,
+                ], 422);
+            }
+
+            $reservacion->fecha_entrada = $fechaEntrada->toDateString();
+            $reservacion->fecha_salida = $fechaSalida->toDateString();
+
+            if ($reservacion->habitacion) {
+                $noches = $fechaEntrada->diffInDays($fechaSalida);
+                $reservacion->total = $noches * (float) $reservacion->habitacion->precio_noche;
+            }
+
+            $reservacion->save();
+
+            return $reservacion;
+        });
+
+        if ($resultado instanceof \Illuminate\Http\JsonResponse) {
+            return $resultado;
+        }
+
+        return response()->json([
+            'message' => 'ReservaciÃ³n pospuesta correctamente.',
+        ]);
+    }
+
+    private function huespedAutenticado(Request $request)
+    {
+        $user = $request->user()->load('huesped');
+
+        if (! $user->huesped) {
+            return response()->json([
+                'message' => 'Perfil de huÃ©sped no encontrado.',
+            ], 404);
+        }
+
+        return $user->huesped;
+    }
+
+    private function reservacionPerteneceAlHuesped(Reservacion $reservacion, int $huespedId): bool
+    {
+        return (int) $reservacion->huesped_id === $huespedId;
+    }
+
+    private function reservacionPuedeSerModificadaPorHuesped(Reservacion $reservacion): bool
+    {
+        return in_array($reservacion->estado_reservacion, self::ESTADOS_RESERVACION_MODIFICABLES_POR_HUESPED, true);
     }
 
     public function menuDelDia()

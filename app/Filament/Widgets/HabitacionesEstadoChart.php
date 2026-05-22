@@ -29,7 +29,7 @@ class HabitacionesEstadoChart extends ChartWidget
     {
         $user = Filament::auth()->user();
 
-        return $user?->role && in_array($user->role->nombre, ['ADMIN', 'SUPER ADMIN'], true);
+        return $user?->role && in_array($user->role->nombre, ['SUPER ADMIN', 'ADMIN', 'RECEPCIONISTA'], true);
     }
 
     protected function getData(): array

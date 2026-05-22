@@ -21,7 +21,7 @@ class IngredientesCriticosWidget extends TableWidget
     {
         $user = Filament::auth()->user();
 
-        return $user?->role && in_array($user->role->nombre, ['ADMIN', 'SUPER ADMIN'], true);
+        return $user?->role && in_array($user->role->nombre, ['SUPER ADMIN', 'ADMIN', 'CHEF'], true);
     }
 
     public function table(Table $table): Table

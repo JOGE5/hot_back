@@ -274,6 +274,18 @@
                 };
             @endphp
             <div class="historial-card">
+                @php
+                    $huesped = $reservacion->huesped;
+                    $nombreHuesped = $huesped
+                        ? ($huesped->trashed() ? 'Huésped dado de baja' : trim(sprintf('%s %s %s', $huesped->nombres, $huesped->apellido_paterno, $huesped->apellido_materno)))
+                        : 'Huésped no disponible';
+                    $documentoHuesped = $huesped?->numero_documento ?? 'Documento no disponible';
+
+                    $habitacion = $reservacion->habitacion;
+                    $textoHabitacion = $habitacion
+                        ? ($habitacion->trashed() ? 'Habitación dada de baja' : sprintf('Hab. %s (%s)', $habitacion->numero, $habitacion->tipo))
+                        : 'Habitación no disponible';
+                @endphp
                 <div class="historial-header">
                     <div>
                         <div class="historial-code">{{ $reservacion->codigo_checkin }}</div>
@@ -304,10 +316,10 @@
                         <div>
                             <div class="historial-label">Huésped</div>
                             <div class="historial-text font-bold">
-                                {{ $reservacion->huesped->nombres }} {{ $reservacion->huesped->apellido_paterno }} {{ $reservacion->huesped->apellido_materno }}
+                                {{ $nombreHuesped }}
                             </div>
                             <div class="historial-text text-xs text-gray-400 mt-0.5">
-                                {{ $reservacion->huesped->numero_documento }}
+                                {{ $documentoHuesped }}
                             </div>
                         </div>
                     </div>
@@ -317,7 +329,7 @@
                         <div>
                             <div class="historial-label">Habitación</div>
                             <div class="historial-text">
-                                Hab. {{ $reservacion->habitacion->numero }} ({{ $reservacion->habitacion->tipo }})
+                                {{ $textoHabitacion }}
                             </div>
                             <div class="historial-text text-xs text-gray-400 mt-0.5">
                                 {{ \Carbon\Carbon::parse($reservacion->fecha_entrada)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($reservacion->fecha_salida)->format('d/m/Y') }}
@@ -326,14 +338,17 @@
                     </div>
                 </div>
 
+                @php
+                    $checkinUserName = $reservacion->checkinUser?->name ? explode(' ', $reservacion->checkinUser->name)[0] : null;
+                @endphp
                 <div class="historial-footer">
                     <div class="historial-total">
                         Bs. {{ number_format($reservacion->total, 2) }} <span class="text-xs font-normal text-gray-400">({{ $reservacion->metodo_pago }})</span>
                     </div>
-                    @if($reservacion->checkinUser)
+                    @if($checkinUserName)
                         <div class="historial-user">
                             <x-heroicon-o-identification class="w-3 h-3" />
-                            {{ explode(' ', $reservacion->checkinUser->name)[0] }}
+                            {{ $checkinUserName }}
                         </div>
                     @endif
                 </div>

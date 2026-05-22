@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +11,16 @@ use Illuminate\Support\Facades\Auth;
 
 class Reservacion extends Model
 {
+    public const MARGEN_DISPONIBILIDAD_DIAS = 2;
+
+    public const MENSAJE_HABITACION_NO_DISPONIBLE = 'La habitación no está disponible para esas fechas. Debe existir un margen mínimo de 2 días después del check-out anterior.';
+
+    public const ESTADOS_BLOQUEANTES_DISPONIBILIDAD = [
+        'Pendiente de pago',
+        'Confirmada',
+        'En estadía',
+    ];
+
     protected $table = 'reservaciones';
 
     protected $fillable = [
@@ -73,6 +85,46 @@ class Reservacion extends Model
                 'observacion' => 'Pago registrado automáticamente desde reservación',
             ]);
         });
+    }
+
+    public static function estadosBloqueantesDisponibilidad(): array
+    {
+        return self::ESTADOS_BLOQUEANTES_DISPONIBILIDAD;
+    }
+
+    public function scopeBloqueantesDisponibilidad(Builder $query): Builder
+    {
+        return $query->whereIn('estado_reservacion', self::estadosBloqueantesDisponibilidad());
+    }
+
+    public function scopeConConflictoDisponibilidad(
+        Builder $query,
+        string $fechaEntrada,
+        string $fechaSalida,
+        int|string|null $ignorarReservacionId = null
+    ): Builder {
+        $entrada = Carbon::parse($fechaEntrada)->toDateString();
+        $salidaConMargen = Carbon::parse($fechaSalida)
+            ->addDays(self::MARGEN_DISPONIBILIDAD_DIAS)
+            ->toDateString();
+
+        return $query
+            ->bloqueantesDisponibilidad()
+            ->when($ignorarReservacionId, fn (Builder $query) => $query->where('id', '!=', $ignorarReservacionId))
+            ->where('fecha_entrada', '<', $salidaConMargen)
+            ->whereRaw('DATE_ADD(fecha_salida, INTERVAL ' . self::MARGEN_DISPONIBILIDAD_DIAS . ' DAY) > ?', [$entrada]);
+    }
+
+    public static function habitacionTieneConflictoDisponibilidad(
+        int|string $habitacionId,
+        string $fechaEntrada,
+        string $fechaSalida,
+        int|string|null $ignorarReservacionId = null
+    ): bool {
+        return self::query()
+            ->where('habitacion_id', $habitacionId)
+            ->conConflictoDisponibilidad($fechaEntrada, $fechaSalida, $ignorarReservacionId)
+            ->exists();
     }
 
     public function huesped(): BelongsTo

@@ -330,10 +330,21 @@
                 <div class="wave"></div>
 
                 <div class="infotop">
-                    <div class="card-header-row">
+                    @php
+                    $huesped = $reservacion->huesped;
+                    $habitacion = $reservacion->habitacion;
+                    $huespedNombre = $huesped
+                        ? ($huesped->trashed() ? 'Huésped dado de baja' : trim(sprintf('%s %s %s', $huesped->nombres, $huesped->apellido_paterno, $huesped->apellido_materno)))
+                        : 'Huésped no disponible';
+                    $huespedDocumento = $huesped?->numero_documento ?? 'Sin registro';
+                    $habitacionTexto = $habitacion
+                        ? ($habitacion->trashed() ? 'Habitación dada de baja' : sprintf('Hab. %s - %s', $habitacion->numero, $habitacion->tipo))
+                        : 'Habitación no disponible';
+                @endphp
+                <div class="card-header-row">
                         <div>
                             <h3 class="card-title">Reserva #{{ $reservacion->codigo_checkin ?? $reservacion->id }}</h3>
-                            <span class="text-xs text-gray-400 mt-1 block">Hab. {{ $reservacion->habitacion->numero }} - {{ $reservacion->habitacion->tipo }}</span>
+                            <span class="text-xs text-gray-400 mt-1 block">{{ $habitacionTexto }}</span>
                         </div>
                         <span class="badge-estado" style="{{ $estadoColor }}">
                             {{ strtoupper($reservacion->estado_reservacion) }}
@@ -343,11 +354,11 @@
                     <div class="card-details">
                         <div class="detail-row">
                             <x-heroicon-o-user class="w-4 h-4" />
-                            <span class="truncate">{{ $reservacion->huesped->nombres }} {{ $reservacion->huesped->apellido_paterno }} {{ $reservacion->huesped->apellido_materno }}</span>
+                            <span class="truncate">{{ $huespedNombre }}</span>
                         </div>
                         <div class="detail-row">
                             <x-heroicon-o-identification class="w-4 h-4" />
-                            <span>{{ $reservacion->huesped->numero_documento }}</span>
+                            <span>{{ $huespedDocumento }}</span>
                         </div>
                         <div class="detail-row">
                             <x-heroicon-o-calendar class="w-4 h-4" />
