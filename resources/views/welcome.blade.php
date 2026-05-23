@@ -116,6 +116,12 @@
                         </li>
                     </ul>
 
+                    <div class="mt-6 flex justify-center">
+                        <a href="{{ url('/admin') }}" class="inline-flex items-center justify-center rounded-sm border border-[#b8944d] bg-[#31543f] px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#263f31] focus:outline-none focus:ring-2 focus:ring-[#b8944d] focus:ring-offset-2 dark:border-[#d6b66a] dark:bg-[#d6b66a] dark:text-[#1b1b18] dark:hover:bg-[#c7a85f]">
+                            Ir al panel administrativo
+                        </a>
+                    </div>
+
                     <p class="mt-6 lg:mt-10 text-[#706f6c] dark:text-[#A1A09A]">
                         v{{ app()->version() }}
                         <a href="https://github.com/laravel/framework/blob/13.x/CHANGELOG.md" target="_blank" class="inline-flex items-center space-x-1 font-medium underline underline-offset-4 text-[#f53003] dark:text-[#FF4433] ml-1">
