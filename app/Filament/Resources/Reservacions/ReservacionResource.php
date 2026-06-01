@@ -64,6 +64,10 @@ class ReservacionResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
+        if ($record instanceof Reservacion && $record->estaCerradaPorCheckout()) {
+            return false;
+        }
+
         $user = Filament::auth()->user();
 
         return $user?->role && in_array($user->role->nombre, [

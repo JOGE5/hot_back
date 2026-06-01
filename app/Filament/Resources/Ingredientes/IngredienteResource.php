@@ -25,6 +25,8 @@ class IngredienteResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Gastronomía';
 
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $navigationLabel = 'Inventario de ingredientes';
 
     protected static ?string $modelLabel = 'ingrediente';

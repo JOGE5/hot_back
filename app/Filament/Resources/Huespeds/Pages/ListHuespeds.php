@@ -22,28 +22,6 @@ class ListHuespeds extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('exportar_excel')
-                ->label('Exportar Excel')
-                ->color('success')
-                ->icon('heroicon-o-document-arrow-down')
-                ->url(route('admin.reportes.huespedes.excel'))
-                ->openUrlInNewTab()
-                ->visible(function () {
-                    $user = Filament::auth()->user();
-                    return $user?->role && in_array($user->role->nombre, ['SUPER ADMIN', 'ADMIN']);
-                }),
-
-            Action::make('exportar_pdf')
-                ->label('Exportar PDF')
-                ->color('danger')
-                ->icon('heroicon-o-document-text')
-                ->url(route('admin.reportes.huespedes.pdf'))
-                ->openUrlInNewTab()
-                ->visible(function () {
-                    $user = Filament::auth()->user();
-                    return $user?->role && in_array($user->role->nombre, ['SUPER ADMIN', 'ADMIN']);
-                }),
-
             Action::make('reporte_dinamico_pdf')
                 ->label('Reporte dinámico PDF')
                 ->color('danger')

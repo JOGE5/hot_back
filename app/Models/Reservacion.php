@@ -127,6 +127,12 @@ class Reservacion extends Model
             ->exists();
     }
 
+    public function estaCerradaPorCheckout(): bool
+    {
+        return trim((string) $this->estado_reservacion) === 'Finalizada'
+            && $this->checkout_at !== null;
+    }
+
     public function huesped(): BelongsTo
     {
         return $this->belongsTo(Huesped::class, 'huesped_id');

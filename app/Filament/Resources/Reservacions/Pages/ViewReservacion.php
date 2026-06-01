@@ -17,6 +17,13 @@ class ViewReservacion extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('reservacion_finalizada')
+                ->label('Reservación finalizada. Solo disponible para consulta histórica.')
+                ->color('gray')
+                ->icon('heroicon-o-lock-closed')
+                ->disabled()
+                ->visible(fn (): bool => $this->record->estaCerradaPorCheckout()),
+
             Action::make('descargar_recibo')
                 ->label('Descargar recibo')
                 ->icon('heroicon-o-document-arrow-down')
@@ -35,7 +42,8 @@ class ViewReservacion extends ViewRecord
                 ->action(fn () => app(ReciboReservacionController::class)->enviarCorreo($this->record))
                 ->visible(fn (): bool => $this->puedeEnviarRecibo($this->record)),
 
-            EditAction::make(),
+            EditAction::make()
+                ->visible(fn (): bool => ReservacionResource::canEdit($this->record)),
         ];
     }
 

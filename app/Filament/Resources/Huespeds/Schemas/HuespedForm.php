@@ -6,10 +6,12 @@ use App\Models\Huesped;
 use App\Models\User;
 use Closure;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class HuespedForm
 {
@@ -142,11 +144,21 @@ class HuespedForm
                     ->visible(fn ($get) => $get('nacionalidad') === 'Otra')
                     ->maxLength(100),
 
+                Placeholder::make('advertencia_edad_minima')
+                    ->hiddenLabel()
+                    ->content(new HtmlString(
+                        '<div style="border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; border-radius: 8px; padding: 12px 14px; font-size: 14px; font-weight: 700;">' .
+                        '<div style="display: flex; align-items: center; gap: 8px;">' .
+                        '<span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 9999px; background: #dc2626; color: #ffffff; font-size: 12px; font-weight: 800;">!</span>' .
+                        '<span style="color: #991b1b;">Solo se permite registrar huéspedes mayores de 21 años.</span>' .
+                        '</div>' .
+                        '</div>'
+                    )),
+
                 DatePicker::make('fecha_nacimiento')
                     ->label('Fecha de nacimiento')
                     ->required()
-                    ->maxDate(now()->subYears(21))
-                    ->helperText('Solo se permite registrar huéspedes mayores de 21 años.'),
+                    ->maxDate(now()->subYears(21)),
 
                 Toggle::make('estado')
                     ->label('Activo')

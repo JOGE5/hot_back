@@ -253,6 +253,28 @@
                 </x-filament::input.wrapper>
             </div>
 
+            <div class="historial-filter">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-identification">
+                    <x-filament::input.select wire:model.live="checkin_user_id">
+                        <option value="">Usuario check-in</option>
+                        @foreach($this->usuariosCheck as $usuarioCheck)
+                            <option value="{{ $usuarioCheck->id }}">{{ $usuarioCheck->name }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="historial-filter">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-identification">
+                    <x-filament::input.select wire:model.live="checkout_user_id">
+                        <option value="">Usuario check-out</option>
+                        @foreach($this->usuariosCheck as $usuarioCheck)
+                            <option value="{{ $usuarioCheck->id }}">{{ $usuarioCheck->name }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+            </div>
+
             <div class="historial-actions">
                 <x-filament::button wire:click="exportarExcel" color="success" icon="heroicon-o-document-arrow-down">
                     Excel

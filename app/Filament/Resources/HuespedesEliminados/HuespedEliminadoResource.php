@@ -7,8 +7,11 @@ use App\Models\Huesped;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -124,7 +127,26 @@ class HuespedEliminadoResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('tipo_documento')
+                    ->label('Tipo de documento')
+                    ->options(fn (): array => self::opcionesDistintas('tipo_documento'))
+                    ->native(false),
+
+                SelectFilter::make('nacionalidad')
+                    ->label('Nacionalidad')
+                    ->options(fn (): array => self::opcionesDistintas('nacionalidad'))
+                    ->searchable()
+                    ->native(false),
+
+                Filter::make('deleted_at')
+                    ->label('Fecha de baja')
+                    ->form(self::formularioRangoFecha())
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoFecha($query, 'deleted_at', $data)),
+
+                Filter::make('papelera_vaciada_at')
+                    ->label('Papelera vaciada en')
+                    ->form(self::formularioRangoFecha())
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoFecha($query, 'papelera_vaciada_at', $data)),
             ])
             ->recordActions([
                 Action::make('recuperar_huesped')
@@ -171,5 +193,34 @@ class HuespedEliminadoResource extends Resource
         return [
             'index' => ListHuespedesEliminados::route('/'),
         ];
+    }
+
+    private static function opcionesDistintas(string $campo): array
+    {
+        return Huesped::onlyTrashed()
+            ->whereNull('papelera_vaciada_at')
+            ->whereNotNull($campo)
+            ->where($campo, '!=', '')
+            ->distinct()
+            ->orderBy($campo)
+            ->pluck($campo, $campo)
+            ->all();
+    }
+
+    private static function formularioRangoFecha(): array
+    {
+        return [
+            DatePicker::make('desde')
+                ->label('Desde'),
+            DatePicker::make('hasta')
+                ->label('Hasta'),
+        ];
+    }
+
+    private static function aplicarRangoFecha(Builder $query, string $campo, array $data): Builder
+    {
+        return $query
+            ->when(filled($data['desde'] ?? null), fn (Builder $query): Builder => $query->whereDate($campo, '>=', $data['desde']))
+            ->when(filled($data['hasta'] ?? null), fn (Builder $query): Builder => $query->whereDate($campo, '<=', $data['hasta']));
     }
 }

@@ -7,10 +7,13 @@ use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -147,6 +150,22 @@ class UsuarioEliminadoResource extends Resource
                             ->send();
                     }),
             ])
+            ->filters([
+                SelectFilter::make('role_id')
+                    ->label('Rol')
+                    ->relationship('role', 'nombre')
+                    ->native(false),
+
+                Filter::make('deleted_at')
+                    ->label('Fecha de baja')
+                    ->form(self::formularioRangoFecha())
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoFecha($query, 'deleted_at', $data)),
+
+                Filter::make('papelera_vaciada_at')
+                    ->label('Papelera vaciada en')
+                    ->form(self::formularioRangoFecha())
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoFecha($query, 'papelera_vaciada_at', $data)),
+            ])
             ->toolbarActions([]);
     }
 
@@ -206,5 +225,22 @@ class UsuarioEliminadoResource extends Resource
         }
 
         return false;
+    }
+
+    private static function formularioRangoFecha(): array
+    {
+        return [
+            DatePicker::make('desde')
+                ->label('Desde'),
+            DatePicker::make('hasta')
+                ->label('Hasta'),
+        ];
+    }
+
+    private static function aplicarRangoFecha(Builder $query, string $campo, array $data): Builder
+    {
+        return $query
+            ->when(filled($data['desde'] ?? null), fn (Builder $query): Builder => $query->whereDate($campo, '>=', $data['desde']))
+            ->when(filled($data['hasta'] ?? null), fn (Builder $query): Builder => $query->whereDate($campo, '<=', $data['hasta']));
     }
 }

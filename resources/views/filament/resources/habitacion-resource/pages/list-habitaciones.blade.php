@@ -272,6 +272,36 @@
                     </x-filament::input.select>
                 </x-filament::input.wrapper>
             </div>
+
+            <div class="habitaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-users">
+                    <x-filament::input type="number" min="1" wire:model.live="capacidad" placeholder="Capacidad" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="habitaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-banknotes">
+                    <x-filament::input type="number" min="0" step="0.01" wire:model.live="precio_desde" placeholder="Precio desde" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="habitaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-banknotes">
+                    <x-filament::input type="number" min="0" step="0.01" wire:model.live="precio_hasta" placeholder="Precio hasta" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="habitaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-calendar">
+                    <x-filament::input type="date" wire:model.live="created_desde" title="Registro desde" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="habitaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-calendar">
+                    <x-filament::input type="date" wire:model.live="created_hasta" title="Registro hasta" />
+                </x-filament::input.wrapper>
+            </div>
         </div>
     </div>
 

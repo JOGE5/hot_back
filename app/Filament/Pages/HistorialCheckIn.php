@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use App\Models\Reservacion;
+use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use BackedEnum;
@@ -28,6 +29,8 @@ class HistorialCheckIn extends Page
     public $fecha_hasta = '';
     public $fecha_checkout_desde = '';
     public $fecha_checkout_hasta = '';
+    public $checkin_user_id = '';
+    public $checkout_user_id = '';
 
     public static function canAccess(): bool
     {
@@ -93,7 +96,23 @@ class HistorialCheckIn extends Page
             $query->whereDate('checkout_at', '<=', $this->fecha_checkout_hasta);
         }
 
+        if (!empty($this->checkin_user_id)) {
+            $query->where('checkin_user_id', $this->checkin_user_id);
+        }
+
+        if (!empty($this->checkout_user_id)) {
+            $query->where('checkout_user_id', $this->checkout_user_id);
+        }
+
         return $query->orderBy('checkin_at', 'desc')->get();
+    }
+
+    public function getUsuariosCheckProperty()
+    {
+        return User::withTrashed()
+            ->whereNotNull('name')
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     public function exportarExcel()
@@ -106,6 +125,8 @@ class HistorialCheckIn extends Page
             'fecha_hasta' => $this->fecha_hasta,
             'fecha_checkout_desde' => $this->fecha_checkout_desde,
             'fecha_checkout_hasta' => $this->fecha_checkout_hasta,
+            'checkin_user_id' => $this->checkin_user_id,
+            'checkout_user_id' => $this->checkout_user_id,
         ]);
     }
 
@@ -119,6 +140,8 @@ class HistorialCheckIn extends Page
             'fecha_hasta' => $this->fecha_hasta,
             'fecha_checkout_desde' => $this->fecha_checkout_desde,
             'fecha_checkout_hasta' => $this->fecha_checkout_hasta,
+            'checkin_user_id' => $this->checkin_user_id,
+            'checkout_user_id' => $this->checkout_user_id,
         ]);
     }
 }

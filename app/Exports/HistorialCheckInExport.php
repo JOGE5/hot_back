@@ -47,6 +47,9 @@ class HistorialCheckInExport implements FromQuery, WithHeadings, WithMapping, Sh
 
     public function map($reservacion): array
     {
+        $huesped = $reservacion->huesped;
+        $habitacion = $reservacion->habitacion;
+
         return [
             $reservacion->codigo_checkin,
             \Carbon\Carbon::parse($reservacion->checkin_at)->format('d/m/Y H:i'),
@@ -54,10 +57,10 @@ class HistorialCheckInExport implements FromQuery, WithHeadings, WithMapping, Sh
             $reservacion->codigo_checkout ?? 'N/A',
             $reservacion->checkout_at ? \Carbon\Carbon::parse($reservacion->checkout_at)->format('d/m/Y H:i') : 'N/A',
             $reservacion->checkoutUser ? explode(' ', $reservacion->checkoutUser->name)[0] : 'N/A',
-            $reservacion->huesped->nombres . ' ' . $reservacion->huesped->apellido_paterno . ' ' . $reservacion->huesped->apellido_materno,
-            $reservacion->huesped->numero_documento,
-            'Hab. ' . $reservacion->habitacion->numero,
-            $reservacion->habitacion->tipo,
+            $huesped ? trim($huesped->nombres . ' ' . $huesped->apellido_paterno . ' ' . ($huesped->apellido_materno ?? '')) : 'HuÃ©sped no disponible',
+            $huesped?->numero_documento ?? 'N/A',
+            $habitacion ? 'Hab. ' . $habitacion->numero : 'HabitaciÃ³n no disponible',
+            $habitacion?->tipo ?? 'N/A',
             \Carbon\Carbon::parse($reservacion->fecha_entrada)->format('d/m/Y'),
             \Carbon\Carbon::parse($reservacion->fecha_salida)->format('d/m/Y'),
             $reservacion->metodo_pago,

@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Reservacions\Pages;
 
 use App\Exports\ReporteDinamicoExport;
 use App\Filament\Resources\Reservacions\ReservacionResource;
+use App\Models\Habitacion;
+use App\Models\Huesped;
 use App\Models\Reservacion;
 use App\Support\Admin\ReporteDinamicoService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -27,6 +29,15 @@ class ListReservacions extends Page
     public ?string $estado_reservacion = null;
     public ?string $estado_pago = null;
     public ?string $origen_reservacion = null;
+    public ?string $metodo_pago = null;
+    public ?string $fecha_entrada_desde = null;
+    public ?string $fecha_entrada_hasta = null;
+    public ?string $fecha_salida_desde = null;
+    public ?string $fecha_salida_hasta = null;
+    public ?string $total_desde = null;
+    public ?string $total_hasta = null;
+    public ?string $huesped_id = null;
+    public ?string $habitacion_id = null;
 
     protected function getHeaderActions(): array
     {
@@ -65,6 +76,20 @@ class ListReservacions extends Page
             : $origen;
     }
 
+    public function getHuespedesFiltroProperty()
+    {
+        return Huesped::withTrashed()
+            ->orderBy('nombres')
+            ->get(['id', 'nombres', 'apellido_paterno', 'apellido_materno', 'numero_documento']);
+    }
+
+    public function getHabitacionesFiltroProperty()
+    {
+        return Habitacion::withTrashed()
+            ->orderBy('numero')
+            ->get(['id', 'numero', 'tipo']);
+    }
+
     private function reservacionesReporteQuery(): Builder
     {
         return Reservacion::query()
@@ -74,12 +99,23 @@ class ListReservacions extends Page
             ])
             ->when($this->buscar, function (Builder $query, $buscar): Builder {
                 return $query->where(function (Builder $query) use ($buscar): void {
-                    $query->whereHas('huesped', function (Builder $q) use ($buscar): void {
+                    $query->where('codigo_checkin', 'like', "%{$buscar}%")
+                    ->orWhere('fecha_entrada', 'like', "%{$buscar}%")
+                    ->orWhere('fecha_salida', 'like', "%{$buscar}%")
+                    ->orWhere('cantidad_personas', 'like', "%{$buscar}%")
+                    ->orWhere('total', 'like', "%{$buscar}%")
+                    ->orWhere('estado_reservacion', 'like', "%{$buscar}%")
+                    ->orWhere('estado_pago', 'like', "%{$buscar}%")
+                    ->orWhere('metodo_pago', 'like', "%{$buscar}%")
+                    ->orWhere('origen_reservacion', 'like', "%{$buscar}%")
+                    ->orWhereHas('huesped', function (Builder $q) use ($buscar): void {
                         $q->withTrashed()
                             ->where('nombres', 'like', "%{$buscar}%")
                             ->orWhere('apellido_paterno', 'like', "%{$buscar}%")
                             ->orWhere('apellido_materno', 'like', "%{$buscar}%")
-                            ->orWhere('numero_documento', 'like', "%{$buscar}%");
+                            ->orWhere('numero_documento', 'like', "%{$buscar}%")
+                            ->orWhere('correo_electronico', 'like', "%{$buscar}%")
+                            ->orWhere('telefono', 'like', "%{$buscar}%");
                     })->orWhereHas('habitacion', function (Builder $q) use ($buscar): void {
                         $q->withTrashed()->where('numero', 'like', "%{$buscar}%");
                     });
@@ -87,7 +123,16 @@ class ListReservacions extends Page
             })
             ->when($this->estado_reservacion, fn (Builder $query, string $estado): Builder => $query->where('estado_reservacion', $estado))
             ->when($this->estado_pago, fn (Builder $query, string $estado): Builder => $query->where('estado_pago', $estado))
-            ->when($this->origen_reservacion, fn (Builder $query, string $origen): Builder => $query->where('origen_reservacion', $origen));
+            ->when($this->origen_reservacion, fn (Builder $query, string $origen): Builder => $query->where('origen_reservacion', $origen))
+            ->when($this->metodo_pago, fn (Builder $query, string $metodo): Builder => $query->where('metodo_pago', $metodo))
+            ->when($this->huesped_id, fn (Builder $query, string $huespedId): Builder => $query->where('huesped_id', $huespedId))
+            ->when($this->habitacion_id, fn (Builder $query, string $habitacionId): Builder => $query->where('habitacion_id', $habitacionId))
+            ->when($this->fecha_entrada_desde, fn (Builder $query, string $fecha): Builder => $query->whereDate('fecha_entrada', '>=', $fecha))
+            ->when($this->fecha_entrada_hasta, fn (Builder $query, string $fecha): Builder => $query->whereDate('fecha_entrada', '<=', $fecha))
+            ->when($this->fecha_salida_desde, fn (Builder $query, string $fecha): Builder => $query->whereDate('fecha_salida', '>=', $fecha))
+            ->when($this->fecha_salida_hasta, fn (Builder $query, string $fecha): Builder => $query->whereDate('fecha_salida', '<=', $fecha))
+            ->when(filled($this->total_desde), fn (Builder $query): Builder => $query->where('total', '>=', $this->total_desde))
+            ->when(filled($this->total_hasta), fn (Builder $query): Builder => $query->where('total', '<=', $this->total_hasta));
     }
 
     private function formularioReporteDinamico(string $modulo): array

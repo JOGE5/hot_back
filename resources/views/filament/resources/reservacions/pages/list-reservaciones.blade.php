@@ -257,6 +257,78 @@
                 </x-filament::input.wrapper>
             </div>
 
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-credit-card">
+                    <x-filament::input.select wire:model.live="metodo_pago">
+                        <option value="">Método pago</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="QR">QR</option>
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-user">
+                    <x-filament::input.select wire:model.live="huesped_id">
+                        <option value="">Huésped</option>
+                        @foreach($this->huespedesFiltro as $huespedFiltro)
+                            <option value="{{ $huespedFiltro->id }}">
+                                {{ trim($huespedFiltro->nombres . ' ' . $huespedFiltro->apellido_paterno . ' ' . ($huespedFiltro->apellido_materno ?? '')) }} - {{ $huespedFiltro->numero_documento }}
+                            </option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-home-modern">
+                    <x-filament::input.select wire:model.live="habitacion_id">
+                        <option value="">Habitación</option>
+                        @foreach($this->habitacionesFiltro as $habitacionFiltro)
+                            <option value="{{ $habitacionFiltro->id }}">Hab. {{ $habitacionFiltro->numero }} - {{ $habitacionFiltro->tipo }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-calendar">
+                    <x-filament::input type="date" wire:model.live="fecha_entrada_desde" title="Entrada desde" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-calendar">
+                    <x-filament::input type="date" wire:model.live="fecha_entrada_hasta" title="Entrada hasta" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-calendar-days">
+                    <x-filament::input type="date" wire:model.live="fecha_salida_desde" title="Salida desde" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-calendar-days">
+                    <x-filament::input type="date" wire:model.live="fecha_salida_hasta" title="Salida hasta" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-banknotes">
+                    <x-filament::input type="number" min="0" step="0.01" wire:model.live="total_desde" placeholder="Total desde" />
+                </x-filament::input.wrapper>
+            </div>
+
+            <div class="reservaciones-select">
+                <x-filament::input.wrapper prefix-icon="heroicon-o-banknotes">
+                    <x-filament::input type="number" min="0" step="0.01" wire:model.live="total_hasta" placeholder="Total hasta" />
+                </x-filament::input.wrapper>
+            </div>
+
             <div style="display: flex; gap: 8px;">
                 <button 
                     type="button" 

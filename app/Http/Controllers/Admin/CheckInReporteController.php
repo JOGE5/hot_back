@@ -15,7 +15,12 @@ class CheckInReporteController extends Controller
     private function getFilteredQuery(Request $request)
     {
         $query = Reservacion::query()
-            ->with(['huesped', 'habitacion', 'checkinUser', 'checkoutUser'])
+            ->with([
+                'huesped' => fn ($query) => $query->withTrashed(),
+                'habitacion' => fn ($query) => $query->withTrashed(),
+                'checkinUser' => fn ($query) => $query->withTrashed(),
+                'checkoutUser' => fn ($query) => $query->withTrashed(),
+            ])
             ->whereNotNull('checkin_at')
             ->whereIn('estado_reservacion', ['En estadía', 'Finalizada']);
 
@@ -25,13 +30,14 @@ class CheckInReporteController extends Controller
                 $q->where('codigo_checkin', 'like', $busqueda)
                   ->orWhere('codigo_checkout', 'like', $busqueda)
                   ->orWhereHas('huesped', function (Builder $h) use ($busqueda) {
-                      $h->where('nombres', 'like', $busqueda)
+                      $h->withTrashed()
+                        ->where('nombres', 'like', $busqueda)
                         ->orWhere('apellido_paterno', 'like', $busqueda)
                         ->orWhere('apellido_materno', 'like', $busqueda)
                         ->orWhere('numero_documento', 'like', $busqueda);
                   })
                   ->orWhereHas('habitacion', function (Builder $hab) use ($busqueda) {
-                      $hab->where('numero', 'like', $busqueda);
+                      $hab->withTrashed()->where('numero', 'like', $busqueda);
                   });
             });
         }
@@ -60,6 +66,14 @@ class CheckInReporteController extends Controller
             $query->whereDate('checkout_at', '<=', $request->fecha_checkout_hasta);
         }
 
+        if ($request->filled('checkin_user_id')) {
+            $query->where('checkin_user_id', $request->checkin_user_id);
+        }
+
+        if ($request->filled('checkout_user_id')) {
+            $query->where('checkout_user_id', $request->checkout_user_id);
+        }
+
         return $query->orderBy('checkin_at', 'desc');
     }
 
@@ -81,6 +95,8 @@ class CheckInReporteController extends Controller
             'IN Hasta' => $request->fecha_hasta,
             'OUT Desde' => $request->fecha_checkout_desde,
             'OUT Hasta' => $request->fecha_checkout_hasta,
+            'Usuario check-in' => $request->checkin_user_id,
+            'Usuario check-out' => $request->checkout_user_id,
         ];
 
         $pdf = Pdf::loadView('reportes.historial_checkin_pdf', compact('reservaciones', 'filtros'))

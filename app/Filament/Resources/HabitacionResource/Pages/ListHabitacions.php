@@ -30,6 +30,11 @@ class ListHabitacions extends Page
     public ?string $buscar = null;
     public ?string $estado = null;
     public ?string $tipo = null;
+    public ?string $capacidad = null;
+    public ?string $precio_desde = null;
+    public ?string $precio_hasta = null;
+    public ?string $created_desde = null;
+    public ?string $created_hasta = null;
 
     protected function getHeaderActions(): array
     {
@@ -68,9 +73,25 @@ class ListHabitacions extends Page
     private function habitacionesReporteQuery(): Builder
     {
         return Habitacion::query()
-            ->when(! empty($this->buscar), fn (Builder $query): Builder => $query->where('numero', 'like', '%' . $this->buscar . '%'))
+            ->when(! empty($this->buscar), function (Builder $query): Builder {
+                $buscar = '%' . trim($this->buscar) . '%';
+
+                return $query->where(function (Builder $query) use ($buscar): void {
+                    $query->where('numero', 'like', $buscar)
+                        ->orWhere('tipo', 'like', $buscar)
+                        ->orWhere('capacidad', 'like', $buscar)
+                        ->orWhere('precio_noche', 'like', $buscar)
+                        ->orWhere('estado', 'like', $buscar)
+                        ->orWhere('descripcion', 'like', $buscar);
+                });
+            })
             ->when(! empty($this->estado), fn (Builder $query): Builder => $query->where('estado', $this->estado))
-            ->when(! empty($this->tipo), fn (Builder $query): Builder => $query->where('tipo', $this->tipo));
+            ->when(! empty($this->tipo), fn (Builder $query): Builder => $query->where('tipo', $this->tipo))
+            ->when(! empty($this->capacidad), fn (Builder $query): Builder => $query->where('capacidad', $this->capacidad))
+            ->when(filled($this->precio_desde), fn (Builder $query): Builder => $query->where('precio_noche', '>=', $this->precio_desde))
+            ->when(filled($this->precio_hasta), fn (Builder $query): Builder => $query->where('precio_noche', '<=', $this->precio_hasta))
+            ->when(filled($this->created_desde), fn (Builder $query): Builder => $query->whereDate('created_at', '>=', $this->created_desde))
+            ->when(filled($this->created_hasta), fn (Builder $query): Builder => $query->whereDate('created_at', '<=', $this->created_hasta));
     }
 
     private function formularioReporteDinamico(string $modulo): array

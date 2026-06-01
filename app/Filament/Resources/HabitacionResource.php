@@ -6,6 +6,7 @@ use App\Filament\Resources\HabitacionResource\Pages;
 use App\Models\Habitacion;
 use BackedEnum;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -19,6 +20,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\View;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -175,6 +177,18 @@ class HabitacionResource extends Resource
                         ->searchable()
                         ->extraAttributes(['class' => 'hidden']),
 
+                    TextColumn::make('capacidad')
+                        ->searchable()
+                        ->extraAttributes(['class' => 'hidden']),
+
+                    TextColumn::make('precio_noche')
+                        ->searchable()
+                        ->extraAttributes(['class' => 'hidden']),
+
+                    TextColumn::make('descripcion')
+                        ->searchable()
+                        ->extraAttributes(['class' => 'hidden']),
+
                     View::make('filament.tables.columns.habitacion-card'),
                 ])->space(0),
             ])
@@ -198,6 +212,48 @@ class HabitacionResource extends Resource
                         'Familiar' => 'Familiar',
                         'Suite' => 'Suite',
                     ]),
+
+                SelectFilter::make('capacidad')
+                    ->label('Capacidad')
+                    ->options(fn (): array => Habitacion::query()
+                        ->select('capacidad')
+                        ->distinct()
+                        ->orderBy('capacidad')
+                        ->pluck('capacidad', 'capacidad')
+                        ->all())
+                    ->native(false),
+
+                Filter::make('precio_noche')
+                    ->label('Precio por noche')
+                    ->form([
+                        TextInput::make('desde')
+                            ->label('Precio desde')
+                            ->numeric()
+                            ->minValue(0),
+                        TextInput::make('hasta')
+                            ->label('Precio hasta')
+                            ->numeric()
+                            ->minValue(0),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(filled($data['desde'] ?? null), fn (Builder $query): Builder => $query->where('precio_noche', '>=', $data['desde']))
+                            ->when(filled($data['hasta'] ?? null), fn (Builder $query): Builder => $query->where('precio_noche', '<=', $data['hasta']));
+                    }),
+
+                Filter::make('created_at')
+                    ->label('Fecha de registro')
+                    ->form([
+                        DatePicker::make('desde')
+                            ->label('Desde'),
+                        DatePicker::make('hasta')
+                            ->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(filled($data['desde'] ?? null), fn (Builder $query): Builder => $query->whereDate('created_at', '>=', $data['desde']))
+                            ->when(filled($data['hasta'] ?? null), fn (Builder $query): Builder => $query->whereDate('created_at', '<=', $data['hasta']));
+                    }),
             ])
             ->actions([
                 ViewAction::make()

@@ -12,6 +12,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -101,6 +102,16 @@ class PagosTable
                     })
                     ->toggleable()
                     ->sortable(),
+
+                TextColumn::make('comprobante')
+                    ->label('Comprobante')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('observacion')
+                    ->label('Observación')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('estado_pago')
@@ -140,6 +151,37 @@ class PagosTable
                                 fn (Builder $query) => $query->whereDate('fecha_pago', '<=', $data['hasta']),
                             );
                     }),
+
+                Filter::make('monto')
+                    ->label('Monto')
+                    ->form([
+                        TextInput::make('desde')
+                            ->label('Monto desde')
+                            ->numeric()
+                            ->minValue(0),
+                        TextInput::make('hasta')
+                            ->label('Monto hasta')
+                            ->numeric()
+                            ->minValue(0),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                filled($data['desde'] ?? null),
+                                fn (Builder $query): Builder => $query->where('monto', '>=', $data['desde'])
+                            )
+                            ->when(
+                                filled($data['hasta'] ?? null),
+                                fn (Builder $query): Builder => $query->where('monto', '<=', $data['hasta'])
+                            );
+                    }),
+
+                SelectFilter::make('registrado_por')
+                    ->label('Registrado por')
+                    ->relationship('registradoPor', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
             ])
             ->headerActions([
                 Action::make('export_excel')

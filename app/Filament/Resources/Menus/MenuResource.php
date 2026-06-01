@@ -25,13 +25,15 @@ class MenuResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
-    protected static string|UnitEnum|null $navigationGroup = 'GastronomÃ­a';
+    protected static string|UnitEnum|null $navigationGroup = 'Gastronomía';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'menu';
 
     protected static ?string $pluralModelLabel = 'menus';
 
-    protected static ?string $navigationLabel = 'Menus';
+    protected static ?string $navigationLabel = 'Menús';
 
     protected static ?string $recordTitleAttribute = 'tipo_menu';
 

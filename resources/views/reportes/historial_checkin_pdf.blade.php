@@ -114,8 +114,8 @@
                     <td>{{ $reservacion->checkout_at ? \Carbon\Carbon::parse($reservacion->checkout_at)->format('d/m/Y H:i') : '-' }}</td>
                     <td>{{ $reservacion->checkoutUser ? explode(' ', $reservacion->checkoutUser->name)[0] : '-' }}</td>
                     
-                    <td>{{ $reservacion->huesped->nombres }} {{ $reservacion->huesped->apellido_paterno }} <br> <span style="font-size: 8px; color: #6b7280;">{{ $reservacion->huesped->numero_documento }}</span></td>
-                    <td>Hab. {{ $reservacion->habitacion->numero }} <br> <span style="font-size: 8px; color: #6b7280;">{{ $reservacion->habitacion->tipo }}</span></td>
+                    <td>{{ $reservacion->huesped ? trim($reservacion->huesped->nombres . ' ' . $reservacion->huesped->apellido_paterno) : 'Huésped no disponible' }} <br> <span style="font-size: 8px; color: #6b7280;">{{ $reservacion->huesped?->numero_documento ?? 'N/A' }}</span></td>
+                    <td>{{ $reservacion->habitacion ? 'Hab. ' . $reservacion->habitacion->numero : 'Habitación no disponible' }} <br> <span style="font-size: 8px; color: #6b7280;">{{ $reservacion->habitacion?->tipo ?? 'N/A' }}</span></td>
                     
                     <td>{{ \Carbon\Carbon::parse($reservacion->fecha_entrada)->format('d/m/Y') }}</td>
                     <td>{{ \Carbon\Carbon::parse($reservacion->fecha_salida)->format('d/m/Y') }}</td>

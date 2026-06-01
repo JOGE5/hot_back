@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +20,22 @@ class EditReservacion extends EditRecord
     protected static string $resource = ReservacionResource::class;
 
     protected ?string $estadoPagoAnterior = null;
+
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+
+        if (! $this->record->estaCerradaPorCheckout()) {
+            return;
+        }
+
+        Notification::make()
+            ->title('La reservación ya fue finalizada y no puede ser modificada.')
+            ->warning()
+            ->send();
+
+        $this->redirect(ReservacionResource::getUrl('view', ['record' => $this->record]));
+    }
 
     protected function getHeaderActions(): array
     {
@@ -48,6 +65,12 @@ class EditReservacion extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        if ($this->record->estaCerradaPorCheckout()) {
+            throw ValidationException::withMessages([
+                'estado_reservacion' => 'La reservación ya fue finalizada y no puede ser modificada.',
+            ]);
+        }
+
         $this->estadoPagoAnterior = $this->record->estado_pago;
 
         unset($data['filtro_tipo_habitacion'], $data['filtro_estado_habitacion']);

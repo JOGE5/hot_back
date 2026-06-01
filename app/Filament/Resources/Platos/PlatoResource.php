@@ -27,6 +27,8 @@ class PlatoResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Gastronomía';
 
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $modelLabel = 'plato';
 
     protected static ?string $pluralModelLabel = 'platos';

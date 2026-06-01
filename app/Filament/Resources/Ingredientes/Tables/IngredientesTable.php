@@ -13,6 +13,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 
 class IngredientesTable
@@ -41,6 +43,7 @@ class IngredientesTable
                     ->money('USD'), // Assuming standard format, we can just use numeric()
                 TextColumn::make('fecha_vencimiento')
                     ->date()
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('estado_visual')
                     ->label('Estado')
@@ -55,6 +58,9 @@ class IngredientesTable
                 TextColumn::make('proveedor')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('observacion')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -67,6 +73,11 @@ class IngredientesTable
                         'unidad' => 'Unidad',
                         'paquete' => 'Paquete',
                     ]),
+                SelectFilter::make('proveedor')
+                    ->label('Proveedor')
+                    ->options(fn (): array => self::opcionesDistintas('proveedor'))
+                    ->searchable()
+                    ->native(false),
                 Filter::make('estado_visual')
                     ->form([
                         Select::make('estado')
@@ -91,7 +102,28 @@ class IngredientesTable
                                 default => $query,
                             }
                         );
-                    })
+                    }),
+                Filter::make('fecha_vencimiento')
+                    ->label('Fecha de vencimiento')
+                    ->form([
+                        DatePicker::make('desde')
+                            ->label('Desde'),
+                        DatePicker::make('hasta')
+                            ->label('Hasta'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoFecha($query, 'fecha_vencimiento', $data)),
+                Filter::make('stock_actual')
+                    ->label('Stock actual')
+                    ->form(self::formularioRangoNumerico('Stock desde', 'Stock hasta'))
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoNumerico($query, 'stock_actual', $data)),
+                Filter::make('stock_minimo')
+                    ->label('Stock mínimo')
+                    ->form(self::formularioRangoNumerico('Mínimo desde', 'Mínimo hasta'))
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoNumerico($query, 'stock_minimo', $data)),
+                Filter::make('costo_unitario')
+                    ->label('Costo unitario')
+                    ->form(self::formularioRangoNumerico('Costo desde', 'Costo hasta'))
+                    ->query(fn (Builder $query, array $data): Builder => self::aplicarRangoNumerico($query, 'costo_unitario', $data)),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -103,5 +135,44 @@ class IngredientesTable
                     RestoreBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function opcionesDistintas(string $campo): array
+    {
+        return \App\Models\Ingrediente::query()
+            ->whereNotNull($campo)
+            ->where($campo, '!=', '')
+            ->distinct()
+            ->orderBy($campo)
+            ->pluck($campo, $campo)
+            ->all();
+    }
+
+    private static function formularioRangoNumerico(string $desde, string $hasta): array
+    {
+        return [
+            TextInput::make('desde')
+                ->label($desde)
+                ->numeric()
+                ->minValue(0),
+            TextInput::make('hasta')
+                ->label($hasta)
+                ->numeric()
+                ->minValue(0),
+        ];
+    }
+
+    private static function aplicarRangoNumerico(Builder $query, string $campo, array $data): Builder
+    {
+        return $query
+            ->when(filled($data['desde'] ?? null), fn (Builder $query): Builder => $query->where($campo, '>=', $data['desde']))
+            ->when(filled($data['hasta'] ?? null), fn (Builder $query): Builder => $query->where($campo, '<=', $data['hasta']));
+    }
+
+    private static function aplicarRangoFecha(Builder $query, string $campo, array $data): Builder
+    {
+        return $query
+            ->when(filled($data['desde'] ?? null), fn (Builder $query): Builder => $query->whereDate($campo, '>=', $data['desde']))
+            ->when(filled($data['hasta'] ?? null), fn (Builder $query): Builder => $query->whereDate($campo, '<=', $data['hasta']));
     }
 }
