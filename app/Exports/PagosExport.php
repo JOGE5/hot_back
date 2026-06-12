@@ -23,7 +23,7 @@ class PagosExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
     {
         $pagos = clone $this->pagos;
         
-        $total = $pagos->sum('monto');
+        $total = $pagos->where('estado_pago', 'Confirmado')->sum('monto');
         
         $pagos->push((object)[
             'is_total_row' => true,

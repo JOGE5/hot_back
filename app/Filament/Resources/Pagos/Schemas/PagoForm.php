@@ -29,7 +29,25 @@ class PagoForm
                                          ->whereNotIn('estado_reservacion', ['Finalizada', 'Cancelada', 'En estadía'])
                         )
                     )
-                    ->getOptionLabelFromRecordUsing(fn (Reservacion $record) => "Reserva #{$record->id} - {$record->huesped->nombres} {$record->huesped->apellido_paterno} (Total: Bs. {$record->total})")
+                    ->getOptionLabelFromRecordUsing(function ($record) {
+                        if (! $record) {
+                            return 'Reservación no disponible';
+                        }
+
+                        $huesped = $record?->huesped;
+
+                        if (! $huesped) {
+                            return 'Reservación #' . $record->getKey() . ' - Huésped no disponible';
+                        }
+
+                        $nombreCompleto = trim(
+                            ($huesped->nombres ?? '') . ' ' .
+                            ($huesped->apellido_paterno ?? '') . ' ' .
+                            ($huesped->apellido_materno ?? '')
+                        );
+
+                        return 'Reservación #' . $record->getKey() . ' - ' . ($nombreCompleto ?: 'Huésped sin nombre');
+                    })
                     ->searchable()
                     ->preload()
                     ->required()
@@ -40,11 +58,13 @@ class PagoForm
                     ->required()
                     ->numeric()
                     ->minValue(0.01)
-                    ->disabled(fn (?Pago $record) => $record && $record->estado_pago === 'Confirmado')
-                    ->rules([
-                        fn (Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                    ->disabled(fn (?Pago $record) => $record && $record->getAttribute('estado_pago') === 'Confirmado')
+                    ->rules(function (Get $get) {
+                        return function (string $attribute, $value, Closure $fail) use ($get) {
                             $reservacion = Reservacion::find($get('reservacion_id'));
-                            if (!$reservacion) return;
+                            if (!$reservacion) {
+                                return;
+                            }
 
                             if ($value > $reservacion->total) {
                                 $fail('El monto no puede ser mayor al total de la reservación (Bs. ' . $reservacion->total . ').');
@@ -53,8 +73,8 @@ class PagoForm
                             if ($get('estado_pago') === 'Confirmado' && (float)$value !== (float)$reservacion->total) {
                                 $fail('Para confirmar el pago, el monto debe ser exactamente igual al total de la reservación (Bs. ' . $reservacion->total . ').');
                             }
-                        },
-                    ]),
+                        };
+                    }),
 
                 Select::make('metodo_pago')
                     ->label('Método de pago')
@@ -75,10 +95,12 @@ class PagoForm
                     ])
                     ->default('Pendiente')
                     ->required()
-                    ->rules([
-                        fn (Get $get, ?Pago $record) => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                    ->rules(function (Get $get, ?Pago $record) {
+                        return function (string $attribute, $value, Closure $fail) use ($get, $record) {
                             $reservacion = Reservacion::find($get('reservacion_id'));
-                            if (!$reservacion) return;
+                            if (!$reservacion) {
+                                return;
+                            }
 
                             if ($value === 'Confirmado') {
                                 if (in_array($reservacion->estado_reservacion, ['Finalizada', 'Cancelada', 'En estadía'])) {
@@ -86,19 +108,19 @@ class PagoForm
                                 }
 
                                 // Check if there is already a confirmed payment for this reservation
-                                $query = Pago::where('reservacion_id', $reservacion->id)
+                                $query = Pago::where('reservacion_id', $reservacion->getKey())
                                     ->where('estado_pago', 'Confirmado');
                                 
                                 if ($record) {
-                                    $query->where('id', '!=', $record->id);
+                                    $query->where('id', '!=', $record->getKey());
                                 }
 
                                 if ($query->exists()) {
                                     $fail('Ya existe un pago confirmado para esta reservación.');
                                 }
                             }
-                        },
-                    ]),
+                        };
+                    }),
 
                 DateTimePicker::make('fecha_pago')
                     ->label('Fecha de pago')

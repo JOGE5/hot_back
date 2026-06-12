@@ -56,7 +56,7 @@
         <tfoot>
             <tr>
                 <th colspan="5" class="text-right">TOTAL GENERAL</th>
-                <th class="text-right">Bs. {{ number_format($pagos->sum('monto'), 2) }}</th>
+                <th class="text-right">Bs. {{ number_format($pagos->where('estado_pago', 'Confirmado')->sum('monto'), 2) }}</th>
                 <th colspan="3"></th>
             </tr>
         </tfoot>

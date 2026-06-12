@@ -91,7 +91,23 @@
 .fi-simple-layout:has(.hot-admin-login-hero) .fi-input {
     min-height: 3rem;
     padding-block: 0.85rem;
+    color: #111827 !important;
 }
+
+.fi-simple-layout:has(.hot-admin-login-hero) .fi-input::placeholder {
+    color: #4b5563 !important;
+    opacity: 1;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) input::placeholder {
+    color: #4b5563 !important;
+    opacity: 1;
+}
+
+.fi-simple-layout:has(.hot-admin-login-hero) input {
+    color: #111827 !important;
+}
+
 
 .fi-simple-layout:has(.hot-admin-login-hero) .fi-sc-form .fi-btn {
     min-height: 3rem;

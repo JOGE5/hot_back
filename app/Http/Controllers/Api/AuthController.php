@@ -9,7 +9,6 @@ use App\Models\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -133,7 +132,12 @@ class AuthController extends Controller
             ], 429);
         }
 
-        if (! Auth::attempt($credentials)) {
+        $user = User::query()
+            ->with(['role', 'huesped'])
+            ->whereRaw('LOWER(email) = ?', [$credentials['email']])
+            ->first();
+
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             RateLimiter::hit($rateLimitKey, self::LOGIN_DECAY_SECONDS);
 
             return response()->json([
@@ -147,19 +151,13 @@ class AuthController extends Controller
 
         RateLimiter::clear($rateLimitKey);
 
-        $user = $request->user()->load('role');
-
         if (! $user->estado) {
-            Auth::logout();
-
             return response()->json([
                 'message' => 'Usuario inactivo.',
             ], 403);
         }
 
         if (! $user->role || $user->role->nombre !== 'HUESPED') {
-            Auth::logout();
-
             return response()->json([
                 'message' => 'Este usuario no tiene acceso al panel huésped.',
             ], 403);
@@ -168,22 +166,27 @@ class AuthController extends Controller
         $huesped = $user->huesped;
 
         if (! $huesped) {
-            Auth::logout();
-
             return response()->json([
                 'message' => 'Este usuario no tiene un perfil de huésped vinculado.',
             ], 403);
         }
 
-        $this->sendLoginCode($user);
-
-        Auth::logout();
-
         return response()->json([
-            'success' => true,
-            'message' => 'Se envió un código de verificación a tu correo.',
-            'requires_verification' => true,
-            'email' => $user->email,
+            'token' => $user->createToken('panel-huesped')->plainTextToken,
+            'user' => [
+                'id' => $user->id,
+                'nombre' => $user->name,
+                'email' => $user->email,
+                'rol' => $user->role->nombre,
+            ],
+            'huesped' => [
+                'id' => $huesped->id,
+                'nombres' => $huesped->nombres,
+                'apellido_paterno' => $huesped->apellido_paterno,
+                'apellido_materno' => $huesped->apellido_materno,
+                'correo_electronico' => $huesped->correo_electronico,
+                'numero_documento' => $huesped->numero_documento,
+            ],
         ]);
     }
 
