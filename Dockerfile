@@ -1,9 +1,9 @@
-FROM node:22 AS frontend
+FROM node:22 AS assets
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm install --no-audit --no-fund
 
 COPY . .
 RUN npm run build
@@ -11,32 +11,32 @@ RUN npm run build
 
 FROM php:8.3-cli
 
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libicu-dev \
     default-mysql-client \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd intl
+    git \
+    libicu-dev \
+    libonig-dev \
+    libpng-dev \
+    libxml2-dev \
+    libzip-dev \
+    unzip \
+    && docker-php-ext-install bcmath exif gd intl mbstring pcntl pdo_mysql zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
 COPY . .
+COPY --from=assets /app/public/build ./public/build
+COPY start.sh /usr/local/bin/start.sh
 
-COPY --from=frontend /app/public/build ./public/build
-
-RUN composer install --no-dev --optimize-autoloader
-
-RUN php artisan config:clear || true
-RUN php artisan route:clear || true
-RUN php artisan view:clear || true
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
+    && chmod +x /usr/local/bin/start.sh \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan storage:link && php artisan serve --host 0.0.0.0 --port ${PORT:-10000}
+CMD ["/usr/local/bin/start.sh"]
