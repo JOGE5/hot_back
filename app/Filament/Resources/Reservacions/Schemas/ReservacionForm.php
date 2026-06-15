@@ -15,6 +15,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\Repeater;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\Action;
 use Filament\Schemas\Components\Section;
@@ -329,6 +330,54 @@ class ReservacionForm
                             }),
                     ])
                     ->columns(2)
+                    ->columnSpanFull(),
+
+                Section::make('Acompañantes')
+                    ->schema([
+                        Repeater::make('acompanantes')
+                            ->relationship('acompanantes')
+                            ->label('Acompañantes')
+                            ->minItems(0)
+                            ->maxItems(function (Get $get) {
+                                $habitacionId = $get('habitacion_id');
+                                if ($habitacionId) {
+                                    $habitacion = Habitacion::find($habitacionId);
+                                    if ($habitacion) {
+                                        $map = [
+                                            'Simple' => 1,
+                                            'Doble' => 4,
+                                            'Matrimonial' => 4,
+                                            'Familiar' => 6,
+                                            'Suite' => 5,
+                                        ];
+
+                                        return $map[$habitacion->tipo] ?? 0;
+                                    }
+                                }
+
+                                return 0;
+                            })
+                            ->schema([
+                                TextInput::make('nombre')
+                                    ->label('Nombre')
+                                    ->required()
+                                    ->maxLength(255),
+
+                                TextInput::make('documento')
+                                    ->label('Documento')
+                                    ->required()
+                                    ->maxLength(50),
+
+                                TextInput::make('edad')
+                                    ->label('Edad')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(150),
+                            ])
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(1)
                     ->columnSpanFull(),
 
                 Section::make('Estado y Observaciones')

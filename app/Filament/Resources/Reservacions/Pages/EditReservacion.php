@@ -80,6 +80,7 @@ class EditReservacion extends EditRecord
         $fechaEntrada = $data['fecha_entrada'] ?? null;
         $fechaSalida = $data['fecha_salida'] ?? null;
         $cantidadPersonas = $data['cantidad_personas'] ?? null;
+        $habitacion = null;
 
         if ($huespedId) {
             $tieneReservaActiva = Reservacion::query()
@@ -158,6 +159,9 @@ class EditReservacion extends EditRecord
             ]);
         }
 
+        // validar acompañantes y recalcular cantidad_personas
+        $this->validarAcompanantes($data, $huespedId, $habitacion);
+
         $estadoPago = $data['estado_pago'] ?? 'Pendiente';
         $estadoActual = $data['estado_reservacion'] ?? 'Pendiente de pago';
 
@@ -177,6 +181,90 @@ class EditReservacion extends EditRecord
         }
 
         return $data;
+    }
+
+    private function validarAcompanantes(array &$data, ?int $huespedId, ?Habitacion $habitacion): void
+    {
+        $acompanantes = $data['acompanantes'] ?? [];
+
+        if (empty($acompanantes)) {
+            $data['cantidad_personas'] = 1;
+            return;
+        }
+
+        $titularDocumento = null;
+        if ($huespedId) {
+            $huesped = \App\Models\Huesped::find($huespedId);
+            if ($huesped) {
+                if (empty($huesped->fecha_nacimiento)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'huesped_id' => 'El huésped seleccionado no tiene fecha de nacimiento registrada. No se puede verificar la mayoría de edad.',
+                    ]);
+                }
+
+                $edadTitular = \Carbon\Carbon::parse($huesped->fecha_nacimiento)->age;
+                if ($edadTitular < 21) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'huesped_id' => 'El titular debe tener al menos 21 años.',
+                    ]);
+                }
+
+                $titularDocumento = $huesped->numero_documento;
+            }
+        }
+
+        $documentos = [];
+        foreach ($acompanantes as $index => $row) {
+            $nombre = trim($row['nombre'] ?? '');
+            $documento = trim($row['documento'] ?? '');
+            $edad = isset($row['edad']) ? (int) $row['edad'] : null;
+
+            if ($nombre === '' || $documento === '' || $edad === null) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}" => 'Todos los acompañantes deben tener nombre, documento y edad.',
+                ]);
+            }
+
+            if ($edad < 0) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.edad" => 'La edad debe ser un número válido.',
+                ]);
+            }
+
+            if ($titularDocumento && $documento === $titularDocumento) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.documento" => 'El documento del acompañante no puede coincidir con el documento del titular.',
+                ]);
+            }
+
+            if (in_array($documento, $documentos, true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.documento" => 'Documento duplicado entre acompañantes.',
+                ]);
+            }
+
+            $documentos[] = $documento;
+        }
+
+        $maxAcompanantes = 0;
+        if ($habitacion) {
+            $map = \App\Models\Reservacion::maxAcompanantesPorTipo();
+            $maxAcompanantes = $map[$habitacion->tipo] ?? 0;
+        }
+
+        $count = count($acompanantes);
+        if ($count > $maxAcompanantes) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'acompanantes' => "La cantidad de acompañantes ({$count}) excede el máximo permitido para la habitación seleccionada ({$maxAcompanantes}).",
+            ]);
+        }
+
+        $data['cantidad_personas'] = 1 + $count;
+        if ($habitacion && $data['cantidad_personas'] > $habitacion->capacidad) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cantidad_personas' => 'La cantidad total de personas supera la capacidad de la habitación.',
+            ]);
+        }
     }
 
     protected function afterSave(): void

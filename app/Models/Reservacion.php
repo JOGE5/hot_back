@@ -157,4 +157,42 @@ class Reservacion extends Model
     {
         return $this->hasMany(Pago::class, 'reservacion_id');
     }
+
+    public function acompanantes(): HasMany
+    {
+        return $this->hasMany(ReservacionAcompanante::class, 'reservacion_id');
+    }
+
+    public static function maxAcompanantesPorTipo(): array
+    {
+        return [
+            'Simple' => 1,
+            'Doble' => 4,
+            'Matrimonial' => 4,
+            'Familiar' => 6,
+            'Suite' => 5,
+        ];
+    }
+
+    public static function getMaxAcompanantesForType(?string $tipo): int
+    {
+        $map = self::maxAcompanantesPorTipo();
+        return $map[$tipo] ?? 0;
+    }
+
+    public function getMaxAcompanantes(): int
+    {
+        $tipo = $this->habitacion?->tipo ?? null;
+        return self::getMaxAcompanantesForType($tipo);
+    }
+
+    public function calcularCantidadPersonas(?int $acompanantesCount = null): int
+    {
+        if ($acompanantesCount === null) {
+            // avoid loading relation when not needed
+            $acompanantesCount = $this->acompanantes()->count();
+        }
+
+        return 1 + (int) $acompanantesCount;
+    }
 }
