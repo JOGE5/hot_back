@@ -9,23 +9,46 @@
             padding: 0;
             box-sizing: border-box;
         }
+        @page {
+            margin: 0;
+        }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 80mm;
+        }
         body {
             font-family: 'Courier New', monospace;
             color: #000;
             font-size: 10px;
-            line-height: 1.3;
-            width: 80mm;
-            margin: 0 auto;
+            line-height: 1.25;
         }
-        .container {
+        .ticket {
             width: 80mm;
             margin: 0;
-            padding: 5mm;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+        .inner {
+            width: 70mm;
+            max-width: 70mm;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         .header {
             text-align: center;
             border-bottom: 1px solid #000;
-            padding-bottom: 3mm;
+            padding: 3mm 0 3mm 0;
             margin-bottom: 3mm;
         }
         .hotel-name {
@@ -39,13 +62,32 @@
             line-height: 1.2;
             margin-top: 1mm;
         }
+        .factura-title,
+        .cuf-box,
+        .qr-box,
+        .totales,
+        .header {
+            width: 70mm;
+            max-width: 70mm;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+            border: 0.5px solid #000;
+        }
+        .section {
+            width: 70mm;
+            max-width: 70mm;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+        }
         .factura-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             text-align: center;
-            margin: 3mm 0;
-            border: 1px solid #000;
-            padding: 2mm;
+            margin: 2mm auto;
+            padding: 4mm 0;
+            border: 0.5px solid #000;
         }
         .factura-numero {
             text-align: center;
@@ -53,25 +95,40 @@
             font-weight: bold;
             margin: 2mm 0 1mm 0;
         }
+        .logo {
+            display: block;
+            margin: 0 auto 3mm auto;
+            max-width: 45mm;
+            height: auto;
+        }
         .cuf-box {
-            border: 1px solid #000;
             padding: 2mm;
-            margin: 2mm 0;
+            margin: 2mm auto;
             background-color: #f9f9f9;
             text-align: center;
+            width: 70mm;
+            max-width: 70mm;
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 0.5px solid #000;
         }
         .cuf-label {
             font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
         }
-        .cuf-value {
-            font-size: 7px;
+        .cuf-value,
+        .cuf-text {
+            font-size: 6px;
             font-weight: bold;
             font-family: 'Courier New', monospace;
             word-break: break-all;
+            overflow-wrap: anywhere;
+            max-width: 100%;
+            display: inline-block;
+            box-sizing: border-box;
             margin-top: 1mm;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         .section {
             margin: 2mm 0;
@@ -89,15 +146,20 @@
             display: flex;
             font-size: 9px;
             margin-bottom: 1mm;
+            width: 100%;
+            box-sizing: border-box;
         }
         .label {
             font-weight: bold;
             width: 35%;
             flex-shrink: 0;
+            box-sizing: border-box;
         }
         .value {
             flex: 1;
             word-wrap: break-word;
+            overflow-wrap: anywhere;
+            box-sizing: border-box;
         }
         .receipt-info {
             font-size: 8px;
@@ -111,31 +173,54 @@
             font-weight: bold;
         }
         .divider {
-            border-top: 1px dashed #000;
-            margin: 2mm 0;
+            width: 70mm;
+            margin: 1.5mm auto;
+            border-top: 0.5px dashed #000;
+            box-sizing: border-box;
+        }
+        .line-solid {
+            width: 70mm;
+            margin: 1.5mm auto;
+            border-top: 0.5px solid #000;
+            box-sizing: border-box;
         }
         .totales {
-            margin: 2mm 0;
-            padding: 1mm;
-            border: 1px solid #000;
+            margin: 2mm auto;
+            padding: 2mm;
+            border: 0.5px solid #000;
+            width: 70mm;
+            max-width: 70mm;
+            box-sizing: border-box;
         }
         .total-row {
             display: flex;
             justify-content: space-between;
             font-size: 9px;
             margin-bottom: 1mm;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .total-row span {
+            display: inline-block;
+            box-sizing: border-box;
+            width: 50%;
+            vertical-align: middle;
+        }
+        .total-row span.amount {
+            text-align: right;
+            white-space: nowrap;
         }
         .total-row.grand-total {
             font-weight: bold;
             font-size: 11px;
-            border-top: 1px solid #000;
+            border-top: 0.5px solid #000;
             padding-top: 1mm;
             margin-top: 1mm;
         }
         .qr-box {
-            border: 1px solid #000;
-            padding: 3mm;
-            margin: 2mm 0;
+            border: 0.5px solid #000;
+            padding: 2mm;
+            margin: 2mm auto;
             text-align: center;
             min-height: 25mm;
             display: flex;
@@ -143,6 +228,15 @@
             justify-content: center;
             align-items: center;
             background-color: #f9f9f9;
+            width: 70mm;
+            max-width: 70mm;
+            box-sizing: border-box;
+        }
+        .qr-image {
+            max-width: 60mm;
+            width: 40mm;
+            height: auto;
+            display: block;
         }
         .qr-label {
             font-size: 8px;
@@ -170,30 +264,36 @@
             font-size: 8px;
             margin-bottom: 1mm;
         }
-        @media print {
-            body {
-                width: 80mm;
-                margin: 0;
-                padding: 0;
-            }
-            .container {
-                padding: 3mm;
-            }
+        /* Tablas seguras para ticket */
+        table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            box-sizing: border-box;
         }
+        td, th {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            box-sizing: border-box;
+        }
+        .amount { text-align: right; white-space: nowrap; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    
+<div class="ticket"><div class="inner">
+    @if(!empty($logoBase64))
+        <img src="{{ $logoBase64 }}" alt="Logo" class="logo">
+    @endif
+
     <!-- ENCABEZADO HOTEL -->
     <div class="header">
         <div class="hotel-name">HOTEL CLUB CAMPESTRE<br>LA MANSIÓN</div>
         <div class="hotel-info">
+            <div>Sucursal 1</div>
             <div>NIT: 000000000</div>
             <div>Sorata, La Paz - Bolivia</div>
-            <div>Teléfono: +591 2 XXX XXXX</div>
-            <div>Email: info@hotellamansion.bo</div>
         </div>
     </div>
 
@@ -213,17 +313,7 @@
 
     <!-- FECHA Y HORA DE EMISIÓN -->
     <div class="fecha-hora">
-        {{ now()->format('d/m/Y H:i') }}
-    </div>
-
-    <!-- INFORMACIÓN DE EMISIÓN -->
-    <div class="section">
-        <div class="receipt-info">
-            <div class="receipt-info-row">
-                <span class="bold">Sucursal:</span> 0001 | 
-                <span class="bold">Punto Venta:</span> 0000001
-            </div>
-        </div>
+        Emitido: {{ now()->format('d/m/Y H:i') }}
     </div>
 
     <div class="divider"></div>
@@ -232,12 +322,12 @@
     <div class="section">
         <div class="section-title">Cliente</div>
         <div class="row">
-            <span class="label">Nombre:</span>
-            <span class="value">{{ $reservacion->huesped->nombres }} {{ $reservacion->huesped->apellido_paterno }} {{ $reservacion->huesped->apellido_materno ?? '' }}</span>
+            <span class="label">Nombre/Razón Social:</span>
+            <span class="value">{{ trim($reservacion->huesped->nombres . ' ' . $reservacion->huesped->apellido_paterno . ' ' . ($reservacion->huesped->apellido_materno ?? '')) }}</span>
         </div>
         <div class="row">
             <span class="label">CI/NIT:</span>
-            <span class="value">{{ $reservacion->huesped->numero_documento }}</span>
+            <span class="value">{{ $reservacion->huesped->numero_documento ?? 'No disponible' }}</span>
         </div>
         <div class="row">
             <span class="label">Teléfono:</span>
@@ -260,7 +350,7 @@
         </div>
         <div class="row">
             <span class="label">Habitación:</span>
-            <span class="value">Nº {{ $reservacion->habitacion->numero }} ({{ $reservacion->habitacion->tipo }})</span>
+            <span class="value">Nº {{ $reservacion->habitacion->numero }}{{ isset($reservacion->habitacion->tipo) ? ' (' . $reservacion->habitacion->tipo . ')' : '' }}</span>
         </div>
         <div class="row">
             <span class="label">Entrada:</span>
@@ -272,7 +362,7 @@
         </div>
         <div class="row">
             <span class="label">Huéspedes:</span>
-            <span class="value">{{ $reservacion->cantidad_personas }}</span>
+            <span class="value">{{ $reservacion->cantidad_personas ?? '1' }}</span>
         </div>
     </div>
 
@@ -287,11 +377,11 @@
         </div>
         <div class="row">
             <span class="label">Cantidad:</span>
-            <span class="value">{{ \Carbon\Carbon::parse($reservacion->fecha_entrada)->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_salida)) ?? 1 }} noche(s)</span>
+            <span class="value">{{ \Carbon\Carbon::parse($reservacion->fecha_entrada)->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_salida)) ?: 1 }} noche(s)</span>
         </div>
         <div class="row">
             <span class="label">Precio Unit.:</span>
-            <span class="value">Bs. {{ number_format($reservacion->total / (max(1, \Carbon\Carbon::parse($reservacion->fecha_entrada)->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_salida)))), 2) }}</span>
+            <span class="value">Bs. {{ number_format($reservacion->total / max(1, \Carbon\Carbon::parse($reservacion->fecha_entrada)->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_salida))), 2) }}</span>
         </div>
     </div>
 
@@ -301,17 +391,26 @@
     <div class="totales">
         <div class="total-row">
             <span>Subtotal:</span>
-            <span>Bs. {{ number_format($reservacion->total, 2) }}</span>
+            <span class="amount">Bs. {{ number_format($reservacion->total, 2) }}</span>
         </div>
         <div class="total-row">
             <span>Descuento:</span>
-            <span>Bs. 0.00</span>
+            <span class="amount">Bs. 0.00</span>
         </div>
         <div class="total-row grand-total">
-            <span>TOTAL A PAGAR:</span>
-            <span>Bs. {{ number_format($reservacion->total, 2) }}</span>
+            <span>Total Bs.</span>
+            <span class="amount">Bs. {{ number_format($reservacion->total, 2) }}</span>
         </div>
     </div>
+
+    <div class="section">
+        <div class="row">
+            <span class="label">SON:</span>
+            <span class="value">{{ $montoLiteral ?? '' }}</span>
+        </div>
+    </div>
+
+    <div class="divider"></div>
 
     <!-- INFORMACIÓN DE PAGO -->
     <div class="section">
@@ -328,10 +427,31 @@
         </div>
     </div>
 
+    <div class="divider"></div>
+
+    <!-- RESPONSABLE -->
+    <div class="section">
+        <div class="section-title">Responsable</div>
+        <div class="row">
+            <span class="label">Responsable:</span>
+            <span class="value">{{ $responsable['nombre'] ?? 'Usuario no disponible' }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Rol:</span>
+            <span class="value">{{ $responsable['rol'] ?? 'Sin rol' }}</span>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
     <!-- QR DE VERIFICACIÓN -->
     <div class="qr-box">
-        <div class="qr-label">QR DE VERIFICACIÓN</div>
-        <div class="qr-placeholder">◼ ◼</div>
+        <div class="qr-label">QR de verificación</div>
+        @if(!empty($qrBase64))
+            <img src="{{ $qrBase64 }}" class="qr-image" alt="QR de verificación">
+        @else
+            <div class="qr-placeholder">QR no disponible</div>
+        @endif
         <div style="font-size: 7px; margin-top: 1mm; text-align: center;">
             NIT: 000000000 | Fact: {{ $numeroFactura ?? '000001' }}
         </div>
@@ -339,32 +459,17 @@
 
     <!-- PIE DE PÁGINA -->
     <div class="footer">
-        <div class="footer-text">
-            ═══════════════════════════════
-        </div>
-        <div class="footer-text">
-            <strong>FACTURA ACADÉMICA</strong>
-        </div>
-        <div class="footer-text">
-            Generada para fines académicos.
-        </div>
-        <div class="footer-text">
-            No válida para crédito fiscal.
-        </div>
-        <div class="footer-text">
-            No es un comprobante fiscal oficial.
-        </div>
-        <div class="footer-text">
-            ═══════════════════════════════
-        </div>
-        <div class="footer-text" style="margin-top: 2mm;">
-            Gracias por su preferencia.
-        </div>
-        <div class="footer-text" style="margin-top: 1mm; font-size: 6px;">
-            Sistema HOT - Hotel Club Campestre La Mansión
-        </div>
+        <div class="footer-text">═══════════════════════════════</div>
+        <div class="footer-text"><strong>FACTURA ACADÉMICA</strong></div>
+        <div class="footer-text">Generada para fines académicos.</div>
+        <div class="footer-text">No válida para crédito fiscal.</div>
+        <div class="footer-text">No es un comprobante fiscal oficial.</div>
+        <div class="footer-text">═══════════════════════════════</div>
+        <div class="footer-text" style="margin-top: 2mm;">Gracias por su preferencia.</div>
+        <div class="footer-text" style="margin-top: 1mm; font-size: 6px;">Sistema HOT - Hotel Club Campestre La Mansión</div>
     </div>
 
+</div>
 </div>
 
 </body>
