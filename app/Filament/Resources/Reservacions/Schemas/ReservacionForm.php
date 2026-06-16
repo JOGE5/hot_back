@@ -125,12 +125,62 @@ class ReservacionForm
                     ->columns(1)
                     ->columnSpanFull(),
 
+                Section::make('Acompañantes')
+                    ->schema([
+                        Repeater::make('acompanantes')
+                            ->relationship('acompanantes')
+                            ->label('Acompañantes')
+                            ->minItems(0)
+                            ->maxItems(function (Get $get) {
+                                $habitacionId = $get('habitacion_id');
+                                if ($habitacionId) {
+                                    $habitacion = Habitacion::find($habitacionId);
+                                    if ($habitacion) {
+                                        $map = [
+                                            'Simple' => 1,
+                                            'Doble' => 4,
+                                            'Matrimonial' => 4,
+                                            'Familiar' => 6,
+                                            'Suite' => 5,
+                                        ];
+
+                                        return $map[$habitacion->tipo] ?? 0;
+                                    }
+                                }
+
+                                return 0;
+                            })
+                            ->schema([
+                                TextInput::make('nombre')
+                                    ->label('Nombre')
+                                    ->required()
+                                    ->maxLength(255),
+
+                                TextInput::make('documento')
+                                    ->label('Documento')
+                                    ->required()
+                                    ->maxLength(50),
+
+                                TextInput::make('edad')
+                                    ->label('Edad')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(150),
+                            ])
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(1)
+                    ->columnSpanFull(),
+
                 Section::make('Datos de la Reservación')
                     ->schema([
                         TextInput::make('cantidad_personas')
                             ->label('Cantidad de Personas')
                             ->required()
                             ->numeric()
+                            ->disabled()
+                            ->dehydrated(true)
                             ->minValue(1)
                             ->maxValue(function (Get $get) {
                                 $habitacionId = $get('habitacion_id');
@@ -150,7 +200,8 @@ class ReservacionForm
                                         }
                                     }
                                 };
-                            }),
+                            })
+                            ->helperText('Se calcula automáticamente: 1 titular + acompañantes registrados.'),
 
                         DatePicker::make('fecha_entrada')
                             ->label('Fecha de Entrada')
@@ -330,54 +381,6 @@ class ReservacionForm
                             }),
                     ])
                     ->columns(2)
-                    ->columnSpanFull(),
-
-                Section::make('Acompañantes')
-                    ->schema([
-                        Repeater::make('acompanantes')
-                            ->relationship('acompanantes')
-                            ->label('Acompañantes')
-                            ->minItems(0)
-                            ->maxItems(function (Get $get) {
-                                $habitacionId = $get('habitacion_id');
-                                if ($habitacionId) {
-                                    $habitacion = Habitacion::find($habitacionId);
-                                    if ($habitacion) {
-                                        $map = [
-                                            'Simple' => 1,
-                                            'Doble' => 4,
-                                            'Matrimonial' => 4,
-                                            'Familiar' => 6,
-                                            'Suite' => 5,
-                                        ];
-
-                                        return $map[$habitacion->tipo] ?? 0;
-                                    }
-                                }
-
-                                return 0;
-                            })
-                            ->schema([
-                                TextInput::make('nombre')
-                                    ->label('Nombre')
-                                    ->required()
-                                    ->maxLength(255),
-
-                                TextInput::make('documento')
-                                    ->label('Documento')
-                                    ->required()
-                                    ->maxLength(50),
-
-                                TextInput::make('edad')
-                                    ->label('Edad')
-                                    ->required()
-                                    ->numeric()
-                                    ->minValue(0)
-                                    ->maxValue(150),
-                            ])
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(1)
                     ->columnSpanFull(),
 
                 Section::make('Estado y Observaciones')
