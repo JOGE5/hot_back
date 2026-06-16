@@ -131,6 +131,14 @@ class ReservacionForm
                             ->relationship('acompanantes')
                             ->label('Acompañantes')
                             ->minItems(0)
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, ?array $state) {
+                                $acompanantesValidos = collect($state ?? [])
+                                    ->filter(fn (array $acompanante) => filled($acompanante['nombre_completo'] ?? $acompanante['nombre'] ?? null) || filled($acompanante['numero_documento'] ?? $acompanante['documento'] ?? null))
+                                    ->count();
+
+                                $set('cantidad_personas', 1 + $acompanantesValidos);
+                            })
                             ->maxItems(function (Get $get) {
                                 $habitacionId = $get('habitacion_id');
                                 if ($habitacionId) {
