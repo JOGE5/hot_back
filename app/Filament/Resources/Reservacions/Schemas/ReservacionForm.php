@@ -314,13 +314,7 @@ class ReservacionForm
                                 }
 
                                 $capacidad = $get('filtro_capacidad_minima');
-                                if ($capacidad && $capacidad !== 'Todos') {
-                                    if ($capacidad === '5') {
-                                        $query->where('capacidad', '>=', 5);
-                                    } else {
-                                        $query->where('capacidad', '>=', (int) $capacidad);
-                                    }
-                                }
+                                $capacidadMinima = ($capacidad && $capacidad !== 'Todos') ? (int) $capacidad : 1;
 
                                 $fechaEntrada = $get('fecha_entrada');
                                 $fechaSalida = $get('fecha_salida');
@@ -334,11 +328,16 @@ class ReservacionForm
                                     });
                                 }
 
-                                $count = (clone $query)->count();
+                                $habitaciones = $query->get()
+                                    ->filter(fn (Habitacion $habitacion) => $habitacion->capacidadMaximaReservable() >= $capacidadMinima);
 
-                                $opciones = $query->get()->mapWithKeys(function ($record) {
+                                $count = $habitaciones->count();
+
+                                $opciones = $habitaciones->mapWithKeys(function (Habitacion $habitacion) {
+                                    $capacidadFuncional = $habitacion->capacidadMaximaReservable();
+
                                     return [
-                                        $record->id => "Habitación {$record->numero} - {$record->tipo} - Bs. " . number_format($record->precio_noche, 2) . "/noche - Capacidad {$record->capacidad}"
+                                        $habitacion->id => "Habitación {$habitacion->numero} - {$habitacion->tipo} - Capacidad {$capacidadFuncional} - Bs. " . number_format($habitacion->precio_noche, 2)
                                     ];
                                 })->toArray();
 
