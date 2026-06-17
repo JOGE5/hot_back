@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <style>
-        .reservaciones-toolbar {
+        .reservaciones-page .reservaciones-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -14,12 +14,12 @@
             border: 1px solid #e5e7eb;
         }
         
-        .dark .reservaciones-toolbar {
+        .dark .reservaciones-page .reservaciones-toolbar {
             background-color: #111827;
             border-color: rgba(255, 255, 255, 0.1);
         }
 
-        .reservaciones-filtros {
+        .reservaciones-page .reservaciones-filtros {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -27,41 +27,40 @@
             flex-grow: 1;
         }
 
-        .reservaciones-buscador {
+        .reservaciones-page .reservaciones-buscador {
             width: 320px;
             max-width: 100%;
         }
 
-        .reservaciones-select {
+        .reservaciones-page .reservaciones-select {
             width: 200px;
             max-width: 100%;
         }
 
         @media (max-width: 768px) {
-            .reservaciones-toolbar {
+            .reservaciones-page .reservaciones-toolbar {
                 align-items: stretch;
             }
-
-            .reservaciones-filtros {
+            .reservaciones-page .reservaciones-filtros {
                 width: 100%;
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .reservaciones-buscador,
-            .reservaciones-select {
+            .reservaciones-page .reservaciones-buscador,
+            .reservaciones-page .reservaciones-select {
                 width: 100%;
             }
         }
 
-        .hotel-grid-container {
+        .reservaciones-page .hotel-grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
             width: 100%;
         }
 
-        .e-card {
+        .reservaciones-page .e-card {
             background: #1f2937;
             box-shadow: 0px 8px 28px -9px rgba(0, 0, 0, 0.45);
             position: relative;
@@ -79,13 +78,13 @@
             width: 100%;
         }
 
-        .e-card:hover {
+        .reservaciones-page .e-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
             border-color: var(--card-accent);
         }
 
-        .wave {
+        .reservaciones-page .wave {
             position: absolute;
             width: 500px;
             height: 500px;
@@ -100,13 +99,13 @@
             z-index: 0;
         }
 
-        .wave:nth-child(2) {
+        .reservaciones-page .wave:nth-child(2) {
             top: 160px;
             animation-duration: 50s;
             opacity: 0.1;
         }
 
-        .wave:nth-child(3) {
+        .reservaciones-page .wave:nth-child(3) {
             top: 180px;
             animation-duration: 55s;
             opacity: 0.05;
@@ -117,7 +116,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        .infotop {
+        .reservaciones-page .infotop {
             position: relative;
             z-index: 10;
             padding: 18px;
@@ -126,14 +125,14 @@
             flex-grow: 1;
         }
 
-        .card-header-row {
+        .reservaciones-page .card-header-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
         }
 
-        .card-title {
+        .reservaciones-page .card-title {
             color: #ffffff;
             font-size: 1.15rem;
             font-weight: 700;
@@ -141,7 +140,7 @@
             line-height: 1.2;
         }
 
-        .badge-estado {
+        .reservaciones-page .badge-estado {
             font-size: 0.65rem;
             font-weight: 800;
             padding: 3px 8px;
@@ -149,7 +148,7 @@
             text-transform: uppercase;
         }
 
-        .badge-tipo {
+        .reservaciones-page .badge-tipo {
             display: inline-block;
             font-size: 0.75rem;
             font-weight: 600;
@@ -160,21 +159,21 @@
             margin-bottom: 12px;
         }
 
-        .card-details {
+        .reservaciones-page .card-details {
             display: flex;
             flex-direction: column;
             gap: 8px;
             margin-bottom: 12px;
         }
 
-        .detail-row {
+        .reservaciones-page .detail-row {
             display: flex;
             align-items: center;
             color: #e5e7eb;
             font-size: 0.85rem;
         }
 
-        .detail-row svg {
+        .reservaciones-page .detail-row svg {
             width: 18px !important;
             height: 18px !important;
             min-width: 18px;
@@ -182,7 +181,7 @@
             margin-right: 8px;
         }
 
-        .card-actions {
+        .reservaciones-page .card-actions {
             display: flex;
             gap: 8px;
             margin-top: auto;
@@ -190,7 +189,7 @@
             padding-top: 12px;
         }
 
-        .empty-reservaciones {
+        .reservaciones-page .empty-reservaciones {
             min-height: 260px;
             display: flex;
             flex-direction: column;
@@ -201,25 +200,47 @@
             color: #d1d5db;
         }
 
-        .empty-reservaciones-icon {
+
+        .reservaciones-page .empty-reservaciones-icon {
             width: 64px !important;
             height: 64px !important;
             color: #d6a84f;
             opacity: 0.85;
         }
 
-        .empty-reservaciones-title {
+        .reservaciones-page .empty-reservaciones-title {
             font-size: 18px;
             font-weight: 700;
             color: #ffffff;
         }
 
-        .empty-reservaciones-text {
+        .reservaciones-page .empty-reservaciones-text {
             font-size: 14px;
             color: #9ca3af;
             max-width: 360px;
         }
+
+        /* Force sensible icon/button sizes only inside this page to avoid affecting Filament globally */
+        .reservaciones-page .fi-pagination .fi-icon,
+        .reservaciones-page .fi-pagination .fi-icon>svg,
+        .reservaciones-page .pagination .fi-icon,
+        .reservaciones-page .pagination svg,
+        .reservaciones-page nav svg {
+            width: 18px !important;
+            height: 18px !important;
+            max-width: 18px !important;
+            max-height: 18px !important;
+        }
+
+        .reservaciones-page button {
+            width: auto !important;
+            height: auto !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+        }
     </style>
+
+    <div class="reservaciones-page">
 
     <div class="reservaciones-toolbar">
         <div class="reservaciones-filtros">
@@ -542,5 +563,7 @@
     
     <div style="margin-top: 24px;">
         {{ $this->reservaciones->links() }}
+    </div>
+
     </div>
 </x-filament-panels::page>

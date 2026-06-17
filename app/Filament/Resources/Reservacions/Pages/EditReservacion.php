@@ -111,7 +111,7 @@ class EditReservacion extends EditRecord
                 ]);
             }
 
-            if ($cantidadPersonas > $habitacion->capacidad) {
+            if ($cantidadPersonas > $habitacion->capacidadMaximaReservable()) {
                 throw ValidationException::withMessages([
                     'cantidad_personas' => "La cantidad de personas ($cantidadPersonas) supera la capacidad máxima de la habitación ({$habitacion->capacidad}).",
                 ]);
@@ -186,6 +186,26 @@ class EditReservacion extends EditRecord
     private function validarAcompanantes(array &$data, ?int $huespedId, ?Habitacion $habitacion): void
     {
         $acompanantes = $data['acompanantes'] ?? [];
+        $titularDocumento = null;
+
+        if ($huespedId) {
+            $huesped = \App\Models\Huesped::find($huespedId);
+            if ($huesped) {
+                if (empty($huesped->fecha_nacimiento)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'huesped_id' => 'El huesped seleccionado no tiene fecha de nacimiento registrada.',
+                    ]);
+                }
+
+                if (\Carbon\Carbon::parse($huesped->fecha_nacimiento)->age < 21) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'huesped_id' => 'El titular debe tener al menos 21 anos.',
+                    ]);
+                }
+
+                $titularDocumento = $huesped->numero_documento;
+            }
+        }
 
         if (empty($acompanantes)) {
             $data['cantidad_personas'] = 1;
@@ -215,19 +235,52 @@ class EditReservacion extends EditRecord
 
         $documentos = [];
         foreach ($acompanantes as $index => $row) {
-            $nombre = trim($row['nombre'] ?? '');
-            $documento = trim($row['documento'] ?? '');
-            $edad = isset($row['edad']) ? (int) $row['edad'] : null;
+            $nombre = trim($row['nombre_completo'] ?? $row['nombre'] ?? '');
+            $tipoDocumento = trim($row['tipo_documento'] ?? '');
+            $documento = trim($row['numero_documento'] ?? $row['documento'] ?? '');
+            $nacionalidad = trim($row['nacionalidad'] ?? '');
+            $fechaNacimiento = $row['fecha_nacimiento'] ?? null;
+            $edad = $fechaNacimiento ? \Carbon\Carbon::parse($fechaNacimiento)->age : (isset($row['edad']) ? (int) $row['edad'] : null);
 
-            if ($nombre === '' || $documento === '' || $edad === null) {
+            if ($nombre === '') {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    "acompanantes.{$index}" => 'Todos los acompañantes deben tener nombre, documento y edad.',
+                    "acompanantes.{$index}.nombre" => 'Complete el nombre del acompañante.',
+                ]);
+            }
+
+            if ($tipoDocumento === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.tipo_documento" => 'Seleccione el tipo de documento del acompañante.',
+                ]);
+            }
+
+            if ($documento === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.documento" => 'Ingrese el número de documento del acompañante.',
+                ]);
+            }
+
+            if ($nacionalidad === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.nacionalidad" => 'Seleccione la nacionalidad del acompañante.',
+                ]);
+            }
+
+            if (empty($fechaNacimiento)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.fecha_nacimiento" => 'Seleccione la fecha de nacimiento del acompañante.',
                 ]);
             }
 
             if ($edad < 0) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     "acompanantes.{$index}.edad" => 'La edad debe ser un número válido.',
+                ]);
+            }
+
+            if ($fechaNacimiento && \Carbon\Carbon::parse($fechaNacimiento)->isFuture()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "acompanantes.{$index}.fecha_nacimiento" => 'La fecha de nacimiento no puede ser futura.',
                 ]);
             }
 
@@ -244,7 +297,14 @@ class EditReservacion extends EditRecord
             }
 
             $documentos[] = $documento;
+            $acompanantes[$index]['nombre_completo'] = $nombre;
+            $acompanantes[$index]['nombre'] = $nombre;
+            $acompanantes[$index]['numero_documento'] = $documento;
+            $acompanantes[$index]['documento'] = $documento;
+            $acompanantes[$index]['edad'] = $edad;
         }
+
+        $data['acompanantes'] = $acompanantes;
 
         $maxAcompanantes = 0;
         if ($habitacion) {
@@ -260,7 +320,7 @@ class EditReservacion extends EditRecord
         }
 
         $data['cantidad_personas'] = 1 + $count;
-        if ($habitacion && $data['cantidad_personas'] > $habitacion->capacidad) {
+        if ($habitacion && $data['cantidad_personas'] > $habitacion->capacidadMaximaReservable()) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'cantidad_personas' => 'La cantidad total de personas supera la capacidad de la habitación.',
             ]);
