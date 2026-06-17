@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Repeater;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\Action;
 use Filament\Schemas\Components\Section;
@@ -34,6 +35,9 @@ class ReservacionForm
                         Hidden::make('origen_reservacion')->default('Recepción presencial'),
                         Select::make('huesped_id')
                             ->label('Huésped')
+                            ->validationMessages([
+                                'required' => 'Seleccione un huésped para continuar.',
+                            ])
                             ->relationship(
                                 name: 'huesped',
                                 modifyQueryUsing: fn (Builder $query) => $query->where('estado', true),
@@ -132,12 +136,32 @@ class ReservacionForm
                             ->label('Acompañantes')
                             ->minItems(0)
                             ->live()
-                            ->afterStateUpdated(function (Set $set, ?array $state) {
+                            ->afterStateUpdated(function (Set $set, Get $get, ?array $state) {
                                 $acompanantesValidos = collect($state ?? [])
                                     ->filter(fn (array $acompanante) => filled($acompanante['nombre_completo'] ?? $acompanante['nombre'] ?? null) || filled($acompanante['numero_documento'] ?? $acompanante['documento'] ?? null))
                                     ->count();
 
-                                $set('cantidad_personas', 1 + $acompanantesValidos);
+                                $cantidadTotal = 1 + $acompanantesValidos;
+
+                                $set('cantidad_personas', $cantidadTotal);
+
+                                $habitacionId = $get('habitacion_id');
+                                if (! $habitacionId) {
+                                    return;
+                                }
+
+                                $habitacion = Habitacion::find($habitacionId);
+                                $capacidadMaxima = $habitacion?->capacidadMaximaReservable();
+
+                                if ($habitacion && $capacidadMaxima !== null && $cantidadTotal > $capacidadMaxima) {
+                                    $set('habitacion_id', null);
+
+                                    Notification::make()
+                                        ->title('Capacidad de habitación excedida')
+                                        ->body("La habitación seleccionada permite máximo {$capacidadMaxima} personas. Actualmente hay {$cantidadTotal} personas. Seleccione una habitación con mayor capacidad.")
+                                        ->warning()
+                                        ->send();
+                                }
                             })
                             ->maxItems(function (Get $get) {
                                 $habitacionId = $get('habitacion_id');
@@ -162,19 +186,72 @@ class ReservacionForm
                                 TextInput::make('nombre')
                                     ->label('Nombre')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->validationMessages([
+                                        'required' => 'Complete el nombre del acompañante.',
+                                    ]),
+
+                                Select::make('tipo_documento')
+                                    ->label('Tipo de documento')
+                                    ->options([
+                                        'CI' => 'Cédula de identidad',
+                                        'PASAPORTE' => 'Pasaporte',
+                                        'CARNET_EXTRANJERIA' => 'Carnet de extranjería',
+                                    ])
+                                    ->required()
+                                    ->validationMessages([
+                                        'required' => 'Seleccione el tipo de documento del acompañante.',
+                                    ]),
 
                                 TextInput::make('documento')
                                     ->label('Documento')
                                     ->required()
-                                    ->maxLength(50),
+                                    ->maxLength(50)
+                                    ->validationMessages([
+                                        'required' => 'Ingrese el número de documento del acompañante.',
+                                    ]),
+
+                                Select::make('nacionalidad')
+                                    ->label('Nacionalidad')
+                                    ->options([
+                                        'Bolivia' => 'Bolivia',
+                                        'Argentina' => 'Argentina',
+                                        'Brasil' => 'Brasil',
+                                        'Chile' => 'Chile',
+                                        'Perú' => 'Perú',
+                                        'Paraguay' => 'Paraguay',
+                                        'Colombia' => 'Colombia',
+                                        'Otro' => 'Otro',
+                                    ])
+                                    ->required()
+                                    ->validationMessages([
+                                        'required' => 'Seleccione la nacionalidad del acompañante.',
+                                    ]),
+
+                                DatePicker::make('fecha_nacimiento')
+                                    ->label('Fecha de nacimiento')
+                                    ->required()
+                                    ->maxDate(now())
+                                    ->validationMessages([
+                                        'required' => 'Seleccione la fecha de nacimiento del acompañante.',
+                                        'max' => 'La fecha de nacimiento no puede ser futura.',
+                                    ])
+                                    ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                        $set('edad', $state ? Carbon::parse($state)->age : null);
+                                    }),
 
                                 TextInput::make('edad')
                                     ->label('Edad')
                                     ->required()
                                     ->numeric()
+                                    ->disabled()
+                                    ->dehydrated(true)
                                     ->minValue(0)
-                                    ->maxValue(150),
+                                    ->maxValue(150)
+                                    ->validationMessages([
+                                        'required' => 'La edad del acompañante debe calcularse correctamente.',
+                                        'numeric' => 'La edad del acompañante debe ser un número válido.',
+                                    ]),
                             ])
                             ->columnSpanFull(),
                     ])
@@ -189,31 +266,22 @@ class ReservacionForm
                             ->numeric()
                             ->disabled()
                             ->dehydrated(true)
+                            ->default(1)
                             ->minValue(1)
-                            ->maxValue(function (Get $get) {
-                                $habitacionId = $get('habitacion_id');
-                                if ($habitacionId) {
-                                    $habitacion = Habitacion::find($habitacionId);
-                                    return $habitacion ? $habitacion->capacidad : 10;
-                                }
-                                return 10;
-                            })
-                            ->rule(function (Get $get) {
-                                return function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $habitacionId = $get('habitacion_id');
-                                    if ($habitacionId) {
-                                        $habitacion = Habitacion::find($habitacionId);
-                                        if ($habitacion && $value > $habitacion->capacidad) {
-                                            $fail("La cantidad de personas no puede superar la capacidad de la habitación seleccionada.");
-                                        }
-                                    }
-                                };
-                            })
-                            ->helperText('Se calcula automáticamente: 1 titular + acompañantes registrados.'),
+                            ->helperText('Se calcula automáticamente: 1 titular + acompañantes registrados.')
+                            ->validationMessages([
+                                'required' => 'La cantidad de personas es obligatoria.',
+                                'numeric' => 'La cantidad de personas debe ser un número válido.',
+                                'min' => 'La reservación debe tener al menos 1 persona.',
+                            ]),
 
                         DatePicker::make('fecha_entrada')
                             ->label('Fecha de Entrada')
                             ->required()
+                            ->validationMessages([
+                                'required' => 'Seleccione la fecha de entrada.',
+                                'min' => 'La fecha de entrada no puede ser anterior a hoy.',
+                            ])
                             ->minDate(now()->startOfDay())
                             ->maxDate(now()->addYears(2))
                             ->live()
@@ -237,6 +305,10 @@ class ReservacionForm
                         DatePicker::make('fecha_salida')
                             ->label('Fecha de Salida')
                             ->required()
+                            ->validationMessages([
+                                'required' => 'Seleccione la fecha de salida.',
+                                'after' => 'La fecha de salida debe ser posterior a la fecha de entrada.',
+                            ])
                             ->minDate(fn (Get $get) => $get('fecha_entrada') ? Carbon::parse($get('fecha_entrada'))->addDay() : now()->addDay())
                             ->maxDate(fn (Get $get) => $get('fecha_entrada') ? Carbon::parse($get('fecha_entrada'))->addYears(2) : now()->addYears(2))
                             ->live()
@@ -286,7 +358,6 @@ class ReservacionForm
                             ->live()
                             ->afterStateUpdated(function (Set $set, Get $get) {
                                 $set('habitacion_id', null);
-                                $set('cantidad_personas', null);
                                 self::updateTotal($set, $get);
                             }),
 
@@ -305,7 +376,6 @@ class ReservacionForm
                             ->live()
                             ->afterStateUpdated(function (Set $set, Get $get) {
                                 $set('habitacion_id', null);
-                                $set('cantidad_personas', null);
                                 self::updateTotal($set, $get);
                             }),
 
@@ -361,6 +431,9 @@ class ReservacionForm
                             })
                             ->searchable()
                             ->required()
+                            ->validationMessages([
+                                'required' => 'Seleccione una habitación disponible.',
+                            ])
                             ->live()
                             ->columnSpanFull()
                             ->rule(function () {
@@ -368,7 +441,7 @@ class ReservacionForm
                                     if ($value) {
                                         $habitacion = Habitacion::find($value);
                                         if ($habitacion && in_array($habitacion->estado, ['Ocupada', 'Mantenimiento', 'Inactiva'])) {
-                                            $fail("No se puede seleccionar una habitación que se encuentre en estado: {$habitacion->estado}.");
+                                            $fail('La habitación seleccionada no está disponible. Seleccione otra habitación.');
                                         }
                                     }
                                 };
@@ -379,8 +452,15 @@ class ReservacionForm
                                     $habitacion = Habitacion::find($habitacionId);
                                     if ($habitacion) {
                                         $cantidad = $get('cantidad_personas');
-                                        if ($cantidad && $cantidad > $habitacion->capacidad) {
-                                            $set('cantidad_personas', null);
+                                        $capacidadFuncional = $habitacion->capacidadMaximaReservable();
+                                        if ($cantidad && $capacidadFuncional !== null && $cantidad > $capacidadFuncional) {
+                                            $set('habitacion_id', null);
+
+                                            Notification::make()
+                                                ->title('Capacidad de habitación excedida')
+                                                ->body("La habitación seleccionada permite máximo {$capacidadFuncional} personas. Actualmente hay {$cantidad} personas. Seleccione una habitación con mayor capacidad.")
+                                                ->warning()
+                                                ->send();
                                         }
                                     }
                                 }

@@ -12,6 +12,14 @@ class Habitacion extends Model
 
     protected $table = 'habitaciones';
 
+    public const CAPACIDADES_POR_TIPO = [
+        'Simple' => 2,
+        'Doble' => 5,
+        'Matrimonial' => 5,
+        'Familiar' => 7,
+        'Suite' => 6,
+    ];
+
     protected $fillable = [
         'numero',
         'tipo',
@@ -31,6 +39,21 @@ class Habitacion extends Model
     public function reservaciones(): HasMany
     {
         return $this->hasMany(Reservacion::class, 'habitacion_id');
+    }
+
+    public static function capacidadMaximaPorTipo(?string $tipo): int
+    {
+        return self::CAPACIDADES_POR_TIPO[$tipo] ?? 0;
+    }
+
+    public function capacidadMaximaReservable(): int
+    {
+        return self::capacidadMaximaPorTipo($this->tipo) ?: (int) $this->capacidad;
+    }
+
+    public function codigoPublico(): string
+    {
+        return (string) ($this->getAttribute('codigo_publico') ?: $this->numero);
     }
 
     public function getEstadoVisualAttribute(): string
